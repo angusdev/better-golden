@@ -1,0 +1,156 @@
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+<title>Golden</title>
+<style>
+* { box-sizing:border-box; font-family: ubuntu-condensed, serif; font-size:12pt; }
+body > div { padding:5px; }
+div.row { padding:5px; clear:both; }
+div.label { clear:both; float:left; width:230px; }
+div.label.radio, div.label.text { padding-top:0.6em; }
+div.label.right { text-align: right; padding-right:5px; }
+#favicon-container img { margin-right: 5px; }
+input[type=text].url { width: 500px; }
+#idle-time { float:left; width: 100px; }
+#idle-time-slider { width: 350px; margin-left: 300px; }
+
+#raw-options { white-space: pre; }
+
+.extlist a, #footer a {
+  color: blue;
+  text-decoration: none;
+}
+.extlist a:visited, #footer a:visited {
+  color: blue;
+}
+.extlist a:hover, #footer a:hover {
+  text-decoration: underline;
+}
+.extlist li {
+  line-height: 2em;
+}
+.extlist li img {
+  margin-bottom: -8px;
+}
+#footer {
+  border-top: 1px solid gray;
+}
+</style>
+<link rel='stylesheet' href='jquery-ui/jquery-ui-1.9.0.min.css' type='text/css' media='all' />
+<script src="https://use.edgefonts.net/ubuntu-condensed.js"></script>
+<script src='jquery-ui/jquery-1.8.2.min.js' type='text/javascript'></script>
+<script src='jquery-ui/jquery-ui-1.9.0.min.js' type='text/javascript'></script>
+<script src='options.js' type='text/javascript'></script>
+</head>
+<body style='display:none;'>
+<div class='row'><h1>選項</h1></div>
+<div class='row'>
+  <div class='radio label'>Favicon 小圖示:</div>
+  <div id='favicon-container' class='radioset'>
+    <input type='radio' id='radio-favicon-default' name='radio-favicon' value='0' /><label for='radio-favicon-default'><img src='http://forum1.hkgolden.com/images/index_images/p.gif' />預設</label>
+    <input type='radio' id='radio-favicon-basic' name='radio-favicon' value='1' /><label for='radio-favicon-basic'><img src='images/golden-favicon.png' /><img src='images/new-message.png' /><img src='images/clock.png' />修正</label>
+    <input type='radio' id='radio-favicon-simple' name='radio-favicon' value='2' /><label for='radio-favicon-simple'><img src='images/golden-favicon-blank.png' /><img src='images/new-message-blank.png' /><img src='images/clock.png' />簡化</label>
+    <!-- <input type='radio' id='radio-favicon-custom' name='radio-favicon' value='3' /><label for='radio-favicon-custom'>自訂</label> -->
+  </div>
+</div>
+<div id='favicon-custom-container' class='row' style='display:none;' >
+  <div class='right text label'>正常:</div><div><input type='text' class='url' /></div>
+  <div class='right text label'>未讀:</div><div><input type='text' class='url' /></div>
+  <div class='right text label'>閒置:</div><div><input type='text' class='url' /></div>
+</div>
+<div class='row'>
+  <div class='label'>閒置時間:</div><div id='idle-time'></div><div id='idle-time-slider'></div>
+</div>
+<div class='row'>
+  <div class='radio label'>菜單位置:</div>
+  <div id='menupos-container' class='radioset'>
+    <input type='radio' id='radio-menupos-top' name='radio-menupos' value='top' /><label for='radio-menupos-top'>置頂</label>
+    <input type='radio' id='radio-menupos-bottom' name='radio-menupos' value='bottom' /><label for='radio-menupos-bottom'>置底</label>
+  </div>
+</div>
+<div class='row'>
+  <div class='radio label'>菜單按鍵:</div>
+  <div id='menubtnstyle-container' class='radioset'>
+    <input type='radio' id='radio-menubtnstyle-both' name='radio-menubtnstyle' value='both' /><label for='radio-menubtnstyle-both'>圖示與文字</label>
+    <input type='radio' id='radio-menubtnstyle-icon' name='radio-menubtnstyle' value='icon' /><label for='radio-menubtnstyle-icon'>圖示</label>
+    <input type='radio' id='radio-menubtnstyle-text' name='radio-menubtnstyle' value='text' /><label for='radio-menubtnstyle-text'>文字</label>
+  </div>
+</div>
+<!--
+<div class='row'>
+  <div class='radio label'>顯示:</div>
+  <div id='blur-container' class='radioset'>
+	  <input type='radio' id='radio-blur-false' name='radio-blur' value='false' /><label for='radio-blur-false'>正常</label>
+	  <input type='radio' id='radio-blur-true' name='radio-blur' value='true' /><label for='radio-blur-true'>低亮度</label>
+    <span style='font-style:italic; margin-left:20px'>只適用於特定版本</span>
+  </div>
+</div>
+-->
+<div class='row'>
+  <div class='radio label'>自動使用「懷舊模式」:</div>
+  <div id='disablesensor-container' class='radioset'>
+    <div id='disablesensor-container' class='radioset'>
+      <input type='radio' id='radio-disablesensor-true' name='radio-disablesensor' value='true' /><label for='radio-disablesensor-true'>啓用</label>
+      <input type='radio' id='radio-disablesensor-false' name='radio-disablesensor' value='false' /><label for='radio-disablesensor-false'>關閉</label>
+    </div>
+  </div>
+</div>
+<div class='row'>
+  <div class='radio label'>自動辨認 Youtube 連結:</div>
+  <div id='youtube-container' class='radioset'>
+    <input type='radio' id='radio-youtube-thumb-big' name='radio-youtube' value='0' /><label for='radio-youtube-thumb-big'>顯示大縮圖</label>
+    <input type='radio' id='radio-youtube-thumb-small' name='radio-youtube' value='1' /><label for='radio-youtube-thumb-small'>顯示小縮圖</label>
+    <input type='radio' id='radio-youtube-video' name='radio-youtube' value='video' /><label for='radio-youtube-video'>顯示影像</label>
+    <input type='radio' id='radio-youtube-off' name='radio-youtube' value='-1' /><label for='radio-youtube-off'>關閉</label>
+  </div>
+</div>
+<div class='row'>
+  <div class='radio label'>捲動至頁底時設定為已讀:</div>
+  <div id='scrollmarkread-container' class='radioset'>
+    <input type='radio' id='radio-scrollmarkread-true' name='radio-scrollmarkread' value='true' /><label for='radio-scrollmarkread-true'>開</label>
+    <input type='radio' id='radio-scrollmarkread-false' name='radio-scrollmarkread' value='false' /><label for='radio-scrollmarkread-false'>關</label>
+  </div>
+</div>
+<div class='row'>
+  <div class='radio label'>Mouse Wheel 左右滾動時跳頁:</div>
+  <div id='wheel-container' class='radioset'>
+    <input type='radio' id='radio-wheel-true' name='radio-wheel' value='true' /><label for='radio-wheel-true'>開</label>
+    <input type='radio' id='radio-wheel-false' name='radio-wheel' value='false' /><label for='radio-wheel-false'>關</label>
+  </div>
+</div>
+<div class='row'>
+  <button id='btn-show-options'>顯示設定</button>
+  <div id='raw-options' style='display:none;'></div>
+</div>
+<div class='row extlist' style='border-top: 1px solid gray; margin-top: 30px; padding-top: 20px;'>
+  <div>
+    配合以下 Extensions 以獲得更好的體驗:
+    <ul>
+      <li>
+        <img src='https://lh6.googleusercontent.com/Z5w32sck7DXK5JzX3iVxIi1aC-1AwKr_zcUQej-w4Lbue0zTlfLLYgmsKxPPrU5Op9KjKd2jjg=s26-h26-e365' width='26' height='26' />
+        <a href='https://chrome.google.com/webstore/detail/adblock-plus-beta/cfhdojbkjhnklbpkdaibdccddilifddb' target='_blank'>Adblock Plus (Beta)</a>
+      </li>
+      <li>
+        <img src='https://ssl.gstatic.com/chrome/webstore/images/thumb.png' width='26' height='26' />
+        <a href='https://chrome.google.com/webstore/detail/gestures-for-chrometm/jpkfjicglakibpenojifdiepckckakgk' target='_blank'>Gestures for Chrome(TM)</a>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class='row extlist'>
+  <div>
+    其他 <a href='http://twitter.com/angusdev'>@angusdev</a> 的 Extensions:
+    <ul>
+      <li>
+        <img src='https://lh3.googleusercontent.com/g2BJxB58_0lxJSjVJjnMua0WUXsQ7Mu0Ivioa5Lcwn4vmb_s-4sHC1ktUEc09PU081Cb1vY7mlc=s26-h26-e365' width='26' height='26' />
+        <a href='https://chrome.google.com/webstore/detail/google-reader-unread-coun/gadjnepdmkddlhhdofmbbojakdokepel' target='_blank'>Google Reader Unread Count
+      </li>
+      <li>
+        <img src='https://lh4.googleusercontent.com/lBcZxira3rGe14u8GgZ9vh0w8svgqnRh4iIUGH0Q_Q-dzIZcFD5BmQ4AmqEWWFWNEsytHow2RA=s26-h26-e365' width='26' height='26' />
+        <a href='https://chrome.google.com/webstore/detail/bookworm/pijhlhemoeoldopgekfehehggmlfpmpe' target='_blank'>Bookworm</a>
+      </li>
+  </div>
+</div>
+<div id='footer' class='row'>ellab.org &copy; 2012 <a href='http://twitter.com/angusdev'><img src='https://twitter.com/images/resources/twitter-bird-light-bgs.png' width='30' height='30' style='margin-bottom:-10px; margin-right:-6px;' border='0'/>@angusdev</a></div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+div.blurdetect { opacity: 0.024; }
+
+img { opacity:.2; }
+img:hover { opacity:1; }
+.ellab-noblur img { opacity:1 !important; }
+
+#aspnetForm[action^="topics.aspx"] div.Topic_ListPanel { opacity: .5; }
+.ellab-noblur #aspnetForm[action^="topics.aspx"] div.Topic_ListPanel { opacity:1 !important; }
+
+#aspnetForm[action^="topics_html.aspx"] div.Topic_ListPanel { opacity: .5; }
+.ellab-noblur #aspnetForm[action^="topics_html.aspx"] div.Topic_ListPanel { opacity:1 !important; }
+
+/* various elements in content page */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) { opacity:.2; }
+.ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) { opacity:1 !important; }
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(5) { opacity:.2; } /* board name */
+.ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(5) { opacity:1 !important; } /* board name */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(8) { opacity:.2; } /* top change page box */
+.ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(8) { opacity:1 !important; } /* top change page box */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) img { opacity:.1; } /* images */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) img:hover { opacity:.5; } /* images */
+.ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) img { opacity:1 !important; } /* images */
+
+/* content box color dim */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) td { border-color:#ddd !important; color: #777 !important; }
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) a { color: #77d !important; }
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) div[style="color: #0000A0;"] { color: #77d !important; }
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) span[style="color: red;"] { color: #d77 !important; }
+.ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) td { border-color:black !important; color: black !important; }
+.ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) a { color: blue !important; }
+.ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) div[style="color: #0000A0;"] { color: #0000A0 !important; }
+.ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) span[style="color: red;"] { color: red !important; }
+
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) > div { opacity:.5; } /* bottom change page box */
+.ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) > div { opacity:1 !important; } /* bottom change page box */
+
+/* dim user name */
+.repliers_left a { opacity: .2; }
+.ellab-noblur .repliers_left a { opacity:1 !important; }
+
+#ctl00_ContentPlaceHolder1_QuickReplyLoginTable { opacity:.2; }
+.ellab-noblur #ctl00_ContentPlaceHolder1_QuickReplyLoginTable { opacity:1 !important; }
+#newmessage { opacity:.2; }
+.ellab-noblur #newmessage { opacity:1 !important; }
+
+/* user script specified */
+.ellab-new-reply {
+  border-style: dotted !important;
+}
+.ellab-noblur .ellab-new-reply {
+  border-style: solid !important;
+}
