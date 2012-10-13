@@ -285,6 +285,10 @@ function menubar(page) {
 
   if (page == 'topics') {
     $('#ellab-markread-btn').style.display = 'none';
+    if (!g_is_blur) {
+      // if g_is_blur == false, there is only options button and reload btn, better to hide it
+      $('#ellab-menubar').style.display = 'none';
+    }
   }
   if (!g_is_blur) {
     $('#ellab-blur-btn').style.display = 'none';
@@ -357,9 +361,6 @@ function menubar(page) {
 
 function view_notice(m) {
   $('#ellab-menubar-msg').innerHTML = m;
-  var menubar = $('#ellab-menubar');
-  menubar.style.display = '';
-  menubar.style.opacity = 1;
 }
 
 // show the page count besides the page dropdown
