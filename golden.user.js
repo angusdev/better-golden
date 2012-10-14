@@ -149,6 +149,14 @@ function on_options_value_changed(key) {
   else if (key === 'youtube') {
     view_expand_youtube_enabler();
   }
+  else if (key === 'collapsequickreply') {
+    if (option_equal('collapsequickreply', true)) {
+      utils.addClass(document.body, 'ellab-collapsequickreply');
+    }
+    else {
+      utils.removeClass(document.body, 'ellab-collapsequickreply');
+    }
+  }
 }
 
 // remove empty row causes by ad blocker
@@ -882,6 +890,7 @@ function init() {
   }
 
   on_options_value_changed('blur');
+  on_options_value_changed('collapsequickreply');
 
   chrome.storage.onChanged.addListener(function(changes, namespace) {
     if (namespace === 'local') {

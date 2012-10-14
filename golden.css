@@ -59,6 +59,14 @@ body { background-image:none !important; }
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(11) { } /* new/reply button */
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(12) { display:none; } /* board name */
 
+/* hide reply box, only show on mouse over */
+/*
+.ellab-collapsequickreply #ctl00_ContentPlaceHolder1_QuickReplyLoginTable > tbody > tr > td > table > tbody > tr:nth-child(2) { display:none; }
+.ellab-collapsequickreply #ctl00_ContentPlaceHolder1_QuickReplyLoginTable:hover > tbody > tr > td > table > tbody > tr:nth-child(2) { display:block; }
+*/
+.ellab-collapsequickreply #newmessage { height: 26px; overflow: hidden; }
+.ellab-collapsequickreply #newmessage:hover { overflow: visible; }
+
 /* dim user name */
 .repliers td { background-color:white !important; }
 .repliers_header { background-color:white !important; color: #aaa !important; }

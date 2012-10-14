@@ -39,10 +39,13 @@ function message_get_options(request, sender, sendResponse) {
     youtube: 0,
     disablesensor: true,
     scrollmarkread: true,
+    collapsequickreply: true,
     wheel: false
   };
 
-  chrome.storage.local.get(['version', 'favicon', 'idle', 'menupos', 'menubtnstyle', 'blur', 'disablesensor', 'youtube', 'scrollmarkread', 'wheel'], function(obj) {
+  chrome.storage.local.get(['version', 'favicon', 'idle', 'menupos', 'menubtnstyle',
+                            'blur', 'disablesensor', 'youtube', 'scrollmarkread',
+                            'collapsequickreply', 'wheel'], function(obj) {
     var options = {};
     for (var k in obj) {
       options[k] = obj[k];
