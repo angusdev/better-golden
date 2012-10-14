@@ -63,11 +63,6 @@ body { background-image:none !important; }
 .repliers td { background-color:white !important; }
 .repliers_header { background-color:white !important; color: #aaa !important; }
 
-#ctl00_ContentPlaceHolder1_QuickReplyLoginTable > tbody > tr > td > table > tbody > tr:nth-child(2) { display:none; }
-#ctl00_ContentPlaceHolder1_QuickReplyLoginTable:hover > tbody > tr > td > table > tbody > tr:nth-child(2) { display:block; }
-#newmessage { height: 20px; overflow: hidden; }
-#newmessage:hover { overflow: visible; }
-
 /* content page */
 iframe[src*="groupbuy.hkgolden.com"] { display:none; }
 

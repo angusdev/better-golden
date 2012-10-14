@@ -38,6 +38,13 @@ img:hover { opacity:1; }
 .repliers_left a { opacity: .2; }
 .ellab-noblur .repliers_left a { opacity:1 !important; }
 
+/* hide reply box, only show on mouse over */
+#ctl00_ContentPlaceHolder1_QuickReplyLoginTable > tbody > tr > td > table > tbody > tr:nth-child(2) { display:none; }
+#ctl00_ContentPlaceHolder1_QuickReplyLoginTable:hover > tbody > tr > td > table > tbody > tr:nth-child(2) { display:block; }
+#newmessage { height: 20px; overflow: hidden; }
+#newmessage:hover { overflow: visible; }
+
+/* blur reply box */
 #ctl00_ContentPlaceHolder1_QuickReplyLoginTable { opacity:.2; }
 .ellab-noblur #ctl00_ContentPlaceHolder1_QuickReplyLoginTable { opacity:1 !important; }
 #newmessage { opacity:.2; }
