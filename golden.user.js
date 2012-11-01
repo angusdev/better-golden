@@ -381,6 +381,7 @@ function view_show_page_count() {
       var select = res.snapshotItem(i);
       var a = document.createElement('a');
       a.innerHTML = lastPage;
+      a.className = 'ellab-last-page';
       /*jshint scripturl:true */
       a.href = 'javascript:changePage(' + lastPage + ')';
       /*jshint scripturl:false */
@@ -553,6 +554,11 @@ function view_check_more_check_content(t) {
       document.title = '(新一頁) ' + meta('title');
     }
     $('#ellab-next-bar').style.display = '';
+    if (parsed.lastPage) {
+      $e('.ellab-last-page', function() {
+        this.innerHTML = parsed.lastPage;
+      });
+    }
     change_favicon('NEW_MESSAGE');
   }
 
@@ -624,6 +630,20 @@ function view_parse_ajax(t) {
   var title = utils.trim(utils.extract(t, '<title>', '</title>'));
   var hasPrev = t.indexOf('src="images/button-prev.gif"') > 0;
   var hasNext = t.indexOf('src="images/button-next.gif"') > 0;
+  var lastPage;
+
+  // get the total page number
+  lastPage = utils.extract(t, 'onchange="javascript: changePage( value )"', '</select>');
+  if (lastPage) {
+    var lastPageRes = lastPage.match(/>(\d+)<\/option>/g);
+    if (lastPageRes) {
+      lastPage = lastPageRes[lastPageRes.length - 1].match(/\d+/)[0];
+    }
+    else {
+      lastPage = null;
+    }
+  }
+
 
   // get the timestamp of  thread0 (first post)
   //
@@ -657,7 +677,8 @@ function view_parse_ajax(t) {
     threads: [ { id:0, timestamp:timestamp?timestamp.toDate():null }],
     title: title,
     hasPrev: hasPrev,
-    hasNext: hasNext
+    hasNext: hasNext,
+    lastPage: lastPage
   };
 }
 
