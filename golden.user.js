@@ -284,6 +284,7 @@ function menubar(page) {
                   '  <div class="ellab-button" id="ellab-goldenshow-btn" style="display:none;"><a href="' + meta('golden-show-url') + '" target="_blank"><span>GoldenShow</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-reload-btn"><a href="#" onclick="document.location.reload();return false;"><span>重載</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-blur-btn"><a href="#"><span>亮度</span></a></div>' +
+                  '  <div class="ellab-button" id="ellab-tweet-btn"><a href="#"><span>Tweet</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-options-btn"><a href="#"><span>設定</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-close-btn" style="display:none;"><a href="#"><span>關閉</span></a></div>' +
                   '</div>';
@@ -293,6 +294,7 @@ function menubar(page) {
 
   if (page == 'topics') {
     $('#ellab-markread-btn').style.display = 'none';
+    $('#ellab-tweet-btn').style.display = 'none';
     if (!g_is_blur) {
       // if g_is_blur == false, there is only options button and reload btn, better to hide it
       $('#ellab-menubar').style.display = 'none';
@@ -332,6 +334,19 @@ function menubar(page) {
   // blur button
   $('#ellab-blur-btn').addEventListener('click', function(e) {
     chrome.extension.sendMessage({msgId: 'set_options', newOptions:{ 'blur':utils.hasClass($('#ellab-blur-btn'), 'on') }});
+    e.stopPropagation();
+    e.preventDefault();
+  });
+
+  // tweet button
+  $('#ellab-tweet-btn').addEventListener('click', function(e) {
+    var x = screen.width/2 - 700/2;
+    var y = screen.height/2 - 500/2;
+    var url = encodeURIComponent('http://diu.li/' + meta('msg-id'));
+    var text = encodeURIComponent(meta('title').replace(/ \- [^-]*$/, ''));
+    window.open('https://twitter.com/intent/tweet?hashtags=hkgolden&source=tweetbutton&text=' + text + '&url=' + url,
+                'tweet',
+                'height=485,width=700,left=' + x +',top=' + y);
     e.stopPropagation();
     e.preventDefault();
   });
