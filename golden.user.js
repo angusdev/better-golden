@@ -23,6 +23,7 @@ FAVICON[2].GOLDEN_ICON = utils.getResourceURL('golden-favicon', 'images/golden-f
 
 var GOLDEN_TIMEFMT = 'M/D/YYYY H:mm A';
 var GOLDEN_TIMEFMT_OLD = 'D/M/YYYY HH:mm';
+GOLDEN_TIMEFMT = GOLDEN_TIMEFMT_OLD;  // observed at 15-Feb-2013 hkgolden.com change to use old timestmap format
 
 var g_options = {};
 var g_is_blur = false;  // is included the blur css
