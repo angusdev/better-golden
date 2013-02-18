@@ -23,7 +23,6 @@ FAVICON[2].GOLDEN_ICON = utils.getResourceURL('golden-favicon', 'images/golden-f
 
 var GOLDEN_TIMEFMT = 'M/D/YYYY H:mm A';
 var GOLDEN_TIMEFMT_OLD = 'D/M/YYYY HH:mm';
-GOLDEN_TIMEFMT = GOLDEN_TIMEFMT_OLD;  // observed at 15-Feb-2013 hkgolden.com change to use old timestmap format
 
 var g_options = {};
 var g_is_blur = false;  // is included the blur css
@@ -96,6 +95,19 @@ function parse_view_url(url) {
     type: type,
     msgId: msgId
   };
+}
+
+function guessTimeFormat(time) {
+  if (typeof(time) !== 'string') {
+    return GOLDEN_TIMEFMT;
+  }
+
+  if (time.match(/\d\d?\/\d\d?\/\d{4} \d\d?\:\d\d( [A|P]M)?/)) {
+    return GOLDEN_TIMEFMT;
+  }
+  else {
+    return GOLDEN_TIMEFMT_OLD;
+  }
 }
 
 function change_favicon(key) {
@@ -450,7 +462,7 @@ function view_update_smart_timestamp() {
   xpathl('//span[contains(concat(" ", @class, " "), " ellab-timestamp ")]').each(function() {
     var timestamp = this.getAttribute('fromtime');
     if (timestamp) {
-      var time = moment(timestamp, this.getAttribute('timefmt') || GOLDEN_TIMEFMT);
+      var time = moment(timestamp, this.getAttribute('timefmt') || guessTimeFormat(timestamp));
       if (typeof maxtime === 'undefined' || maxtime.diff(time) < 0) {
         maxtime = time;
       }
