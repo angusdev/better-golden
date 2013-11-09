@@ -437,26 +437,20 @@ function view_add_golden_show_link() {
 
 // show '5 minutes ago', '9 hours ago' besides timestamp
 function view_smart_timestamp() {
-  var i=0;
-
-  var thread = $('#Thread_No' + i);
-  while (thread || i===0) {
-    // need specially handle thread == 0
-    if (thread) {
-      var span = xpath('./td[2]/table/tbody/tr[3]/td/div' + (i===0?'[2]':'') + '/span', thread);
-      if (span.getElementsByClassName('ellab-timestamp').length === 0) {
-        // if not already has insert the smart timestamp tag
-        if (span.textContent) {
-          span.innerHTML += ' (<span class="ellab-timestamp" fromtime="' + span.textContent + '"></span>)';
-        }
+  xpathl('//tr[contains(@id, "Thread_No")]').each(function() {
+    var isThread0 = this.getAttribute('id') === 'Thread_No0';
+    var span = xpath('./td[2]/table/tbody/tr[3]/td/div' + (isThread0?'[2]':'') + '/span', this);
+    if (span && span.getElementsByClassName('ellab-timestamp').length === 0) {
+      // if not already has insert the smart timestamp tag
+      if (span.textContent) {
+        span.innerHTML += ' (<span class="ellab-timestamp" fromtime="' + span.textContent + '"></span>)';
       }
     }
-
-    thread = $('#Thread_No' + (++i));
-  }
+  });
 
   view_update_smart_timestamp();
 }
+
 
 function view_update_smart_timestamp() {
   var maxtime;
