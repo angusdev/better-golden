@@ -8,6 +8,7 @@ var extract = org.ellab.utils.extract;
 var xpath = org.ellab.utils.xpath;
 var xpathl = org.ellab.utils.xpathl;
 var $ = org.ellab.utils.sizzleSmart;
+var $1 = org.ellab.utils.sizzleOne;
 var $e = org.ellab.utils.sizzleEach;
 
 var DEBUG = false;
@@ -857,6 +858,114 @@ function view_favicon() {
   }
 }
 
+function view_story_mode() {
+  $e('.repliers_left', function() {
+    var userid = this.parentNode.getAttribute('userid');
+    if (userid) {
+      var div = document.createElement('div');
+      div.className = 'ellab-story-mode-btn';
+      var a = document.createElement('a');
+      a.innerHTML = '睇故模式';
+      a.href = '#';
+      a.setAttribute('userid', userid);
+      a.addEventListener('click', function(e) {
+        view_story_mode_click(e.target.getAttribute('userid'));
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+      div.appendChild(a);
+      this.appendChild(div);
+    }
+  });
+}
+
+function view_story_mode_click(userid) {
+  $e('tr[id^="Thread_No"][userid!="' + userid + '"]', function() {
+    var parentTable = utils.parent(utils.parent(this, 'table'), 'table');
+    if (parentTable) {
+      parentTable.parentNode.removeChild(parentTable);
+    }
+  });
+
+  view_story_mode_page(userid, meta_int('curr-page') + 1);
+}
+
+function view_story_mode_page(userid, page) {
+  view_notice('睇故模式 ﹣ 正在讀取第 ' + page + ' 頁');
+
+  var url = document.location.href;
+  if (url.match(/[\?|&]page=/)) {
+    url = url.replace(/page=\d+/, 'page=' + page);
+  }
+  else {
+    url += '&page=' + page;
+  }
+
+  debug('view_story_mode_page url=' + url);
+  utils.crossOriginXMLHttpRequest({
+    url: url,
+    method: 'get',
+    onload: function(response) {
+      var addedHTML = null;
+      var t = extract(response.responseText, '<table class="repliers">', '<div style="background-color: #336699; height: 9px; "></div>');
+      if (t) {
+        t = t.replace(/<div style="border: solid 1px #000000;">\s*$/, '');
+        t = '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 7px;"><tr><td>' + t;
+        addedHTML = view_story_mode_page_check_content(userid, page, t);
+      }
+
+      var hasNext = view_parse_ajax(response.responseText).hasNext;
+
+      if (hasNext) {
+        // sleep for a while, seems will be blocked if too much requests
+        window.setTimeout(function() {
+          view_story_mode_page(userid, page + 1);
+        }, 3000);
+      }
+      else {
+        view_notice('睇故模式 ﹣ 完成讀取 ' + page + ' 頁');
+      }
+    }
+  });
+}
+
+// return the appended HTML, null if no thread is appended
+function view_story_mode_page_check_content(userid, page, text) {
+  var parentTable = utils.parent($1('table.repliers'), 'div');
+  if (!parentTable) {
+    return null;
+  }
+
+  var parent = parentTable.parentNode;
+  var divTempHolder = document.createElement('div');
+  divTempHolder.innerHTML = text;
+  var divDest = document.createElement('div');
+  var firstThreadOfThisPage = true;
+  for (var i=0;i<divTempHolder.childNodes.length;i++) {
+    var c = divTempHolder.childNodes[i];
+    // only include the real reply, filter out google ad
+    // also only include same user
+    if (xpath('.//tr[contains(@id, "Thread_No")]', c) && xpath('.//tr[contains(@userid, "' + userid + '")]', c)) {
+      if (firstThreadOfThisPage) {
+        var divPageNum = document.createElement('div');
+        divPageNum.innerHTML = '<a href="javascript:changePage(' + page + ')">第 ' + page + ' 頁</a>';
+        parent.appendChild(divPageNum);
+        firstThreadOfThisPage = false;
+      }
+      divDest.appendChild(c);
+    }
+  }
+  divTempHolder = null;
+
+  if (divDest.innerHTML) {
+    parent.appendChild(divDest);
+    view_smart_timestamp();
+  }
+
+  // return true if some thread is matched
+  return divDest.innerHTML;
+}
+
 function topics() {
   var starttime, time;
   starttime = time = performance('topics');
@@ -912,6 +1021,8 @@ function view() {
   time = performance('view_smart_timestamp', time);
   view_check_more();
   time = performance('view_check_more', time);
+  view_story_mode();
+  time = performance('view_story_mode', time);
 
   window.setInterval(function() {
     view_update_smart_timestamp();
