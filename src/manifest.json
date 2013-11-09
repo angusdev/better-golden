@@ -14,14 +14,15 @@
       "matches": ["http://*.hkgolden.com/*"],
       "all_frames": true,
       "run_at": "document_end",
-      "js": ["lib/sizzle-1.8.2.js", "lib/moment-1.7.2.min.js", "lib/moment-lang-zh-tw.js", "ellab-utils-6.js", "golden.user.js"],
+      "js": ["lib/sizzle-1.10.11.min.js", "lib/moment-1.7.2.min.js", "lib/moment-lang-zh-tw.js", "ellab-utils-6.js", "golden.user.js"],
       "css": ["golden.css"]
     }
   ],
   "options_page": "options.html",
   "content_security_policy": "script-src 'self' https://use.edgefonts.net/; object-src 'self'",
   "permissions": [ "storage", "tabs", "http://use.edgefonts.net/league-gothic.js" ],
-  "web_accessible_resources": ["images/clock.png",
+  "web_accessible_resources": ["lib/sizzle-1.10.11.min.map",
+                               "images/clock.png",
                                "images/golden-favicon.png", "images/golden-favicon-blank.png",
                                "images/new-message.png", "images/new-message-blank.png"]
 }
