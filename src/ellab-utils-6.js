@@ -330,6 +330,27 @@ org.ellab.utils.parent = function(node, tag) {
   return this.parent(parentNode, tag);
 };
 
+// iterate the parent nodes until match the tag name
+org.ellab.utils.prevSibling = function(node, tag) {
+  if (!node) return node;
+
+  var prevSibling = node.previousSibling;
+
+  if (prevSibling.nodeType !== 3 && (!prevSibling || !prevSibling.tagName || prevSibling.tagName.toUpperCase() == tag.toUpperCase())) return prevSibling;
+
+  return this.prevSibling(prevSibling, tag);
+};
+
+org.ellab.utils.removeChild = function(node) {
+  if (!node) return node;
+
+  if (node.parentNode) {
+    node.parentNode.removeChild(node);
+  }
+
+  return node;
+};
+
 // inject an javascript to the main window, useful for call the function in window
 org.ellab.utils.inject = function(fn) {
   var script = document.createElement('script');
