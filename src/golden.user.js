@@ -28,6 +28,12 @@ var GOLDEN_TIMEFMT_OLD = 'D/M/YYYY HH:mm';
 var g_options = {};
 var g_is_blur = false;  // is included the blur css
 
+function error(m) {
+  if (console && typeof console.log !== undefined) {
+    console.log('error', m);
+  }
+}
+
 function debug(m) {
   if (DEBUG) {
     if (console && typeof console.log !== undefined) {
@@ -493,6 +499,41 @@ function view_remove_ad_empty_row() {
         (this.innerHTML.indexOf('MsgInLineAd') >= 0 && this.innerHTML.toUpperCase().indexOf('<SPAN ID="MSGINLINEAD') > 0)) {
       this.style.display = 'none';
     }
+  });
+}
+
+function view_clean_layout() {
+  // make the notice box on the top smaller
+  // golden.css to hide the title and only show the first line of body text (<strong/>)
+  // to put the title in front fo the first line, and make the <strong/> a link to expand the body
+  $e('.DivResizableBoxContainer', function() {
+    var title = $1('.DivResizableBoxTitle div', this).innerHTML.replace('class="BoxTitleLink"', '');
+    $e('.DivResizableBoxDetails > strong', function() {
+      this.innerHTML = title + ' : <a data-ellab="expand-notice" class="novisited" href="#">' + this.innerHTML + '</a>';
+      $1('a[data-ellab="expand-notice"]', this).addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        e.target.parentNode.parentNode.style.height = 'auto';
+      }, false);
+    }, null, this);
+  });
+
+  // clean up the
+  // span#ctl00_ContentPlaceHolder1_lb_UserName 現有會員可[按此]登入。
+  // span#ctl00_ContentPlaceHolder1_lb_CompanyMode [公司模式-開] [懷舊模式-關] [大字型] [小字型]
+  // br br
+  // 您現在聚腳在 非會員伺服器 XX台內。br
+  // a#ctl00_ContentPlaceHolder1_changeLink1 [轉到會員伺服器]  [轉到海外伺服器]
+
+  // remove the second <br> of the "<br><br>"
+  $e('br + br', function() {
+    utils.removeChild(this);
+  }, null, $('#ctl00_ContentPlaceHolder1_lb_CompanyMode').parentNode);
+
+  // remove the <br> preceeding #ctl00_ContentPlaceHolder1_lb_CompanyMode and #ctl00_ContentPlaceHolder1_changeLink1
+  $e('#ctl00_ContentPlaceHolder1_lb_CompanyMode, #ctl00_ContentPlaceHolder1_changeLink1', function() {
+    utils.removeChild(utils.prevSibling(this, 'br'));
   });
 }
 
@@ -1033,6 +1074,8 @@ function view() {
   time = performance('view_favicon', time);
   view_remove_ad_empty_row();
   time = performance('view_remove_ad_empty_row', time);
+  try { view_clean_layout(); } catch (ex) { error(ex); }
+  time = performance('view_clean_layout', time);
   //view_add_golden_show_link();
   //time = performance('view_add_golden_show_link', time);
   view_golden_message_link();
