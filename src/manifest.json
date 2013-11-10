@@ -14,7 +14,10 @@
       "matches": ["http://*.hkgolden.com/*"],
       "all_frames": true,
       "run_at": "document_end",
-      "js": ["lib/sizzle-1.10.11.min.js", "lib/moment-1.7.2.min.js", "lib/moment-lang-zh-tw.js", "ellab-utils-6.js", "golden.user.js"],
+      "js": ["lib/sizzle-1.10.11.min.js", "lib/moment-1.7.2.min.js", "lib/moment-lang-zh-tw.js",
+             "lib/lscache-cfd89b7f7a.js",
+            "lib/js-deflate/base64-2.11.js", "lib/js-deflate/rawdeflate-0.5.js", "lib/js-deflate/rawinflate-0.3.js",
+             "ellab-utils-6.js", "golden.user.js"],
       "css": ["golden.css"]
     }
   ],

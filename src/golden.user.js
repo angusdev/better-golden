@@ -1,5 +1,5 @@
 /*jshint white: false, browser: true, onevar:false */
-/*global chrome, console, org, moment */
+/*global chrome, console, org, moment, lscache, RawDeflate, Base64 */
 (function() {
 'use strict';
 
@@ -451,7 +451,6 @@ function view_smart_timestamp() {
   view_update_smart_timestamp();
 }
 
-
 function view_update_smart_timestamp() {
   var maxtime;
   xpathl('//span[contains(concat(" ", @class, " "), " ellab-timestamp ")]').each(function() {
@@ -890,40 +889,66 @@ function view_story_mode_click(userid) {
 function view_story_mode_page(userid, page) {
   view_notice('睇故模式 ﹣ 正在讀取第 ' + page + ' 頁');
 
-  var url = document.location.href;
-  if (url.match(/[\?|&]page=/)) {
-    url = url.replace(/page=\d+/, 'page=' + page);
+  var cacheKey = 'storymode-' + meta('msg-id') + '-' + userid + '-' + page;
+
+  var cachedItem = lscache?lscache.get(cacheKey):null;
+  if (cachedItem) {
+    debug('hit cache on page ' + page);
+
+    //if (cachedItem.text) {
+      //view_story_mode_page_check_content(userid, page, cachedItem.text);
+    if (cachedItem.textz) {
+      view_story_mode_page_check_content(userid, page, Base64.btou(RawDeflate.inflate(cachedItem.textz)));
+    }
+
+    // cachedItem.hasNext should be always true, we won't cache the last page
+    view_story_mode_page(userid, page + 1);
   }
   else {
-    url += '&page=' + page;
-  }
-
-  debug('view_story_mode_page url=' + url);
-  utils.crossOriginXMLHttpRequest({
-    url: url,
-    method: 'get',
-    onload: function(response) {
-      var addedHTML = null;
-      var t = extract(response.responseText, '<table class="repliers">', '<div style="background-color: #336699; height: 9px; "></div>');
-      if (t) {
-        t = t.replace(/<div style="border: solid 1px #000000;">\s*$/, '');
-        t = '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 7px;"><tr><td>' + t;
-        addedHTML = view_story_mode_page_check_content(userid, page, t);
-      }
-
-      var hasNext = view_parse_ajax(response.responseText).hasNext;
-
-      if (hasNext) {
-        // sleep for a while, seems will be blocked if too much requests
-        window.setTimeout(function() {
-          view_story_mode_page(userid, page + 1);
-        }, 3000);
-      }
-      else {
-        view_notice('睇故模式 ﹣ 完成讀取 ' + page + ' 頁');
-      }
+    var url = document.location.href;
+    if (url.match(/[\?|&]page=/)) {
+      url = url.replace(/page=\d+/, 'page=' + page);
     }
-  });
+    else {
+      url += '&page=' + page;
+    }
+
+    debug('view_story_mode_page url=' + url);
+    utils.crossOriginXMLHttpRequest({
+      url: url,
+      method: 'get',
+      onload: function(response) {
+        var addedHTML = null;
+        var t = extract(response.responseText, '<table class="repliers">', '<div style="background-color: #336699; height: 9px; "></div>');
+        if (t) {
+          t = t.replace(/<div style="border: solid 1px #000000;">\s*$/, '');
+          t = '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 7px;"><tr><td>' + t;
+          addedHTML = view_story_mode_page_check_content(userid, page, t);
+        }
+
+        var hasNext = view_parse_ajax(response.responseText).hasNext;
+
+        // set cache
+        if (lscache && hasNext) {
+          // we won't cache the last page
+          // also won't cache the text content if no thread is added for this page, to save space
+          debug('set cache:' + cacheKey);
+          //lscache.set(cacheKey, { text:addedHTML, hasNext:hasNext });
+          lscache.set(cacheKey, { textz:RawDeflate.deflate(Base64.utob(addedHTML)), hasNext:hasNext });
+        }
+
+        if (hasNext) {
+          // sleep for a while, seems will be blocked if too much requests
+          window.setTimeout(function() {
+            view_story_mode_page(userid, page + 1);
+          }, 3000);
+        }
+        else {
+          view_notice('睇故模式 ﹣ 完成讀取 ' + page + ' 頁');
+        }
+      }
+    });
+  }
 }
 
 // return the appended HTML, null if no thread is appended
