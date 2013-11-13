@@ -1,6 +1,6 @@
 div.blurdetect { opacity: 0.024; }
 
-img { opacity:.2; }
+img { opacity:.4; }
 img:hover { opacity:1; }
 .ellab-noblur img { opacity:1 !important; }
 
@@ -11,11 +11,11 @@ img:hover { opacity:1; }
 .ellab-noblur #aspnetForm[action^="topics_html.aspx"] div.Topic_ListPanel { opacity:1 !important; }
 
 /* various elements in content page */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) { opacity:.2; }
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) { opacity:.4; }
 .ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) { opacity:1 !important; }
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(5) { opacity:.2; } /* board name */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(5) { opacity:.4; } /* board name */
 .ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(5) { opacity:1 !important; } /* board name */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(8) { opacity:.2; } /* top change page box */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(8) { opacity:.4; } /* top change page box */
 .ellab-noblur #ctl00_ContentPlaceHolder1_view_form > div:nth-child(8) { opacity:1 !important; } /* top change page box */
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) img { opacity:.1; } /* images */
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) img:hover { opacity:.5; } /* images */
@@ -39,9 +39,9 @@ img:hover { opacity:1; }
 .ellab-noblur .repliers_left a { opacity:1 !important; }
 
 /* blur reply box */
-#ctl00_ContentPlaceHolder1_QuickReplyLoginTable { opacity:.2; }
+#ctl00_ContentPlaceHolder1_QuickReplyLoginTable { opacity:.4; }
 .ellab-noblur #ctl00_ContentPlaceHolder1_QuickReplyLoginTable { opacity:1 !important; }
-#newmessage { opacity:.2; }
+#newmessage { opacity:.4; }
 .ellab-noblur #newmessage { opacity:1 !important; }
 
 /* user script specified */
