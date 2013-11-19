@@ -73,8 +73,12 @@ body { background-image:none !important; }
 .repliers td { background-color:white !important; }
 .repliers_header { background-color:white !important; color: #aaa !important; }
 
-/* content page */
-iframe[src*="groupbuy.hkgolden.com"] { display:none; }
+/* content page, hide some ads */
+iframe[src*="groupbuy.hkgolden.com"], iframe[src*="doubleclick.net"],
+embed[src*="bmediaasia.com"], embed[src*="fortunepharm.com"],
+*[id*="GenMainPageAd"], *[id*="google_ads_frame"],
+*[id*="aswift"], span[id*="tempAd"] { display:none; }
+
 
 /* hide the main body part of notice box on top */
 .DivResizableBoxTitle { display:none; }
