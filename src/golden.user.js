@@ -304,6 +304,7 @@ function menubar(page) {
                   '  <div class="ellab-button" id="ellab-goldenshow-btn" style="display:none;"><a href="' + meta('golden-show-url') + '" target="_blank"><span>GoldenShow</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-reload-btn"><a href="#" onclick="document.location.reload();return false;"><span>重載</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-blur-btn"><a href="#"><span>亮度</span></a></div>' +
+                  '  <div class="ellab-button" id="ellab-blockquote-btn"><a href="#"><span>顯示所有引用</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-tweet-btn"><a href="#"><span>Tweet</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-options-btn"><a href="#"><span>設定</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-close-btn" style="display:none;"><a href="#"><span>關閉</span></a></div>' +
@@ -354,6 +355,19 @@ function menubar(page) {
   // blur button
   $('#ellab-blur-btn').addEventListener('click', function(e) {
     chrome.extension.sendMessage({msgId: 'set_options', newOptions:{ 'blur':utils.hasClass($('#ellab-blur-btn'), 'on') }});
+    e.stopPropagation();
+    e.preventDefault();
+  });
+
+  // blockquote button
+  $('#ellab-blockquote-btn').addEventListener('click', function(e) {
+    $e('td > div > blockquote > div > blockquote > div > blockquote > div > blockquote', function() {
+      utils.toggleClass(this, 'quote-expanded');
+    });
+    $e('td > div > blockquote > div > blockquote > div > blockquote > div > blockquote > div > blockquote', function() {
+      this.style.display = this.style.display==='block'?'none':'block';
+    });
+
     e.stopPropagation();
     e.preventDefault();
   });

@@ -85,6 +85,11 @@ embed[src*="bmediaasia.com"], embed[src*="fortunepharm.com"],
 .DivResizableBoxDetails { overflow: hidden; height: 1.5em; border-width: 1px !important; }
 .DivResizableBoxDetails > strong + img { display:none; }
 
+/* hide nested quote */
+td > div > blockquote > div > blockquote > div > blockquote > div > blockquote:before { content:"<<< ... >>>\A"; white-space: pre-wrap; }
+td > div > blockquote > div > blockquote > div > blockquote > div > blockquote.quote-expanded:before { content:""; }
+td > div > blockquote > div > blockquote > div > blockquote > div > blockquote > div > blockquote { display:none; }
+
 /* user script specified */
 a.novisited {
   color: blue;
@@ -157,6 +162,9 @@ a.novisited:hover {
 }
 #ellab-blur-btn.icon > a {
   background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3AoECCQJ6t3xuAAAAAd0RVh0QXV0aG9yAKmuzEgAAAAMdEVYdERlc2NyaXB0aW9uABMJISMAAAAKdEVYdENvcHlyaWdodACsD8w6AAAADnRFWHRDcmVhdGlvbiB0aW1lADX3DwkAAAAJdEVYdFNvZnR3YXJlAF1w/zoAAAALdEVYdERpc2NsYWltZXIAt8C0jwAAAAh0RVh0V2FybmluZwDAG+aHAAAAB3RFWHRTb3VyY2UA9f+D6wAAAAh0RVh0Q29tbWVudAD2zJa/AAAABnRFWHRUaXRsZQCo7tInAAACpElEQVRIibWVz27TQBDGv7HX8Z80RKJV4BWat6igZ06ROPTYW3kIH4Fjya05t2pPPAhRkYpEW8GFAwiIRBOrtZ3Y+3GIndj52x460ko71u78PN+OZoQkHtVIlhYAs9VqmQDMVnHfapXW5BtgFu/MxSsEFt/3jdkDD12+7xsAJPeFJERESFJEXler7u8oij1LKYOk4diO9INA6rUawziiiOg0SbTr2HfBbfic5MkqhVTRaX84PN7b2wMAaE0hCYiA1AABwzBKsp6cHAPAasDOzo4imQBAMhyh1+vlgPEJESArBBHJ5QRJjIbDtW+sgiCQ3Lnp99G/6YPgBCAic5ckA/zrD9YDik5KIk3TNQACGGeitX4YIBmNEA+HQAHw6+dP/On9RXgXjsNrDcMwEA9H+HZ9DduuvJp5+B8kvy8EjJIEcRyXAJ+6XWxvb8Nzvbk/bjRe4OXu7sdJbiSuri6BsYpLMpgBBIMBKpVK6ZtkQmUlDsnikcRgEKyQaEEGnufCcZx7AzzXXQ4QwRwg1ZzLoHxnWgQkoWd6WwkQhhGiKCpViFIKtm2vAUwzUJa1HGAYBi4vvyIMp5DqxsYcIJcoBxQlslQpJBTQnThWpWK9ffc+BYBOp4N6vS6fz89T27ZBamRta8EbTCVS84CptdvtNN/v7+8DAL9cXMCyrKUZ5H4OME2zDOh2sdIsy4Jj22vbx6oMVo60zc2naDxrACg3wGKHLc6Dra3NMoBkIiImyXQ2eBYNrudCIBMARUCdAgRM04TWujC4ytnlA6dCcmHvFZE31aprRVH8xFLKJGlmQ8io12o6G0JpmiSp69iD4DZMSR6WdFu1Dg4OrHx/dHSEs7MzaTab4vu+2Ww25fT0VDqdzsLzk5H5mKbWH8G4+BcY7/F3/wE3kUAFGLRIAwAAAABJRU5ErkJggg==);
+}
+#ellab-blockquote-btn.icon > a {
+  background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QsUBjQlPnwPigAAAAd0RVh0QXV0aG9yAKmuzEgAAAAMdEVYdERlc2NyaXB0aW9uABMJISMAAAAKdEVYdENvcHlyaWdodACsD8w6AAAADnRFWHRDcmVhdGlvbiB0aW1lADX3DwkAAAAJdEVYdFNvZnR3YXJlAF1w/zoAAAALdEVYdERpc2NsYWltZXIAt8C0jwAAAAh0RVh0V2FybmluZwDAG+aHAAAAB3RFWHRTb3VyY2UA9f+D6wAAAAh0RVh0Q29tbWVudAD2zJa/AAAABnRFWHRUaXRsZQCo7tInAAAC1klEQVRIidWVz08TQRTH32yX7bZ03XbrSpvySwoKhXoBgolEE2OCR2OMUU+evHk1njzo/1BNvHnQqBFjookXiCEBEggHhVBtLNBSLN12S3+urZ3Z9SA0dem6JAYTX/K9vO/b95mZN9lBmqbBYQZ1qN3/BYA2MmZn52inkxcBEL+bKhVLxfTpsbHqXwF6evynurq6z7sEYYCiKLvOruZzuWg8HvuwthZdqNVqxAyA9obscHD8yMjoLZfLFQQAZPZhuVzeWFpaDMmynDQF2O12+/j42Xssy/rMGjcGxjg/Pz/3YGcnmzKqoQEAAoHBKy0ttI8QfJC+pFgofpGz8nKhkP+GEPzxmJCmaTAxcTGEAHEmjbVCsbgSDq8+tVgsFlEUR/gjfCcAcADwo1KpJKW09FGSUssY4zqUBgBQidpq1lyWM9ORSGQyEAjc5HnnMOiuOMdxg6IoXuj1+7fcbvdjWZajsFekKEqCEAxGKpdLsfDn8ItgMHjH4XCMEoIpo1qapn3BoeBdt9vdUwfEYhtvCSYawQSaKZFITHk93nNMC9NlVNMoTdVY/3H/jTogsZWYT2fS7wghGiEE9CqVSts21naymWckhmF66zMAAFgNrz73erzr7b72qzRtaWs8X5ZlRUywcsBb9mtomqb8BgAASG4nF2iaXhKPisMdvvbbu2nV5XQOpSRphueOnNEP1ygyWXlmHwAAAGNMEEKLXo+nCgDWXD43tba+/gQAoLuza1IQhMsmEE1RlE+xeOxVU8Du9rRAf38GAcLxzc1ne/mNeOyN4BKibcfESwxj7dODVEJSmaz8XkqnpwkhqiEAAKDyvRJPpaXXGONaYz67k10BgBUba3MyDNPRarf73IJwDQAskejX+9VqtaBfbVNZrVbOyNPL5/FeH+g78QghZNF7xjuoVIpGnj6SUuolRVFOVVX3/5cOukozPQyFmGb5+ntwWPH/P/o/AVaLKb3XyY3OAAAAAElFTkSuQmCC);
 }
 #ellab-tweet-btn.icon > a {
   background-image:url(http://twitter.com/images/resources/twitter-bird-light-bgs.png);
