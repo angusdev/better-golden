@@ -794,7 +794,7 @@ function view_golden_message_link() {
     });
   }
 
-  xpathl('//a[contains(@href, "hkgolden.com/view.aspx")]').each(function() {
+  xpathl('//a[contains(@href, "hkgolden.com/view.aspx") and not(contains(@id, "changeLink"))]').each(function() {
     var parsed = parse_view_url(this.href);
     if (parsed.msgId && parsed.forum) {
       if (parsed.msgId != meta('msg-id')) {
