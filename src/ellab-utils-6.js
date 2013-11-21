@@ -426,6 +426,15 @@ org.ellab.utils.addClass = function(ele, clazz) {
   ele.className += (ele.className?' ':'') + clazz;
 };
 
+org.ellab.utils.toggleClass = function(ele, clazz) {
+  if (org.ellab.utils.hasClass(ele, clazz)) {
+    org.ellab.utils.removeClass(ele, clazz);
+  }
+  else{
+    org.ellab.utils.addClass(ele, clazz);
+  }
+};
+
 org.ellab.utils.insertAfter = function(newnode, oldnode) {
   oldnode.parentNode.insertBefore(newnode, oldnode.nextSibling);
 };
