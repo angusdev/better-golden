@@ -660,11 +660,9 @@ function view_prevnextbar() {
   if (pageWidthContainer) {
     var left = utils.calcOffsetLeft(pageWidthContainer);
     left -= 5;
-    left = Math.max(left, 30);
-    if (left >= 30) {
-      prev.style.width = left + 'px';
-      next.style.width = left + 'px';
-    }
+    left = Math.max(left, 50);
+    prev.style.width = left + 'px';
+    next.style.width = left + 'px';
   }
 
   function p_prev_page() {
