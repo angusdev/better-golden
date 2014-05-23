@@ -96,6 +96,9 @@ function parse_view_url(url) {
   if (forum) {
     forum = forum[1];
   }
+  else if (url.match(/^https?\:\/\/search\.hkgolden\.com\//)) {
+    forum = 'search';
+  }
 
   return {
     forum: forum,
@@ -187,11 +190,11 @@ function topics_remove_ad_empty_row() {
 }
 
 function topics_add_golden_show_link() {
-  var server = document.location.host.match(/forum(\d+)\.hkgolden\.com/)[1];
+  var parsed = parse_view_url(document.location.href);
   xpathl('//div[@id="HotTopics"]/div/table/tbody/tr/td[1]/img').each(function() {
     var msgId = this.parentNode.parentNode.cells[1].getElementsByTagName('a')[0].href.match(/message=(\d+)/)[1];
     var a = document.createElement('a');
-    a.href = 'http://ellab.org/goldenshow.php#hkg' + server + '/' + msgId;
+    a.href = 'http://ellab.org/goldenshow.php#hkg' + parsed.forum + '/' + msgId;
     a.title = 'GoldenShow';
     a.target = '_blank';
     var parent = this.parentNode;
@@ -282,8 +285,11 @@ function view_onready() {
   }
 
   meta('title', document.title);
-  meta('server', document.location.host.match(/forum(\d+)\.hkgolden\.com/)[1]);
-  meta('msg-id', document.location.search.match(/message=(\d+)/)[1]);
+  var parsed = parse_view_url(document.location.href);
+  if (parsed) {
+    meta('server', parsed.forum);
+    meta('msg-id', parsed.msgId);
+  }
   meta('golden-show-url', 'http://ellab.org/goldenshow.php#hkg' + meta('server') + '/' + meta('msg-id'));
 
   if (DEBUG) {
