@@ -27,6 +27,8 @@ var GOLDEN_TIMEFMT_OLD = 'D/M/YYYY HH:mm';
 
 var g_options = {};
 var g_is_blur = false;  // is included the blur css
+var g_threads = [];
+var g_lastThreadNode;
 
 function error(m) {
   if (console && typeof console.log !== undefined) {
@@ -83,6 +85,19 @@ function option_equal(key, value) {
   return ('' + g_options[key]) === ('' + value);
 }
 
+function createDocument(obj) {
+  if (typeof obj === 'string') {
+    //var doc = document.implementation.createHTMLDocument('http://www.w3.org/1999/xhtml', 'html',  null);
+    //doc.documentElement.innerHTML = obj;
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(obj, "text/html");
+    return doc;
+  }
+  else {
+    return obj;
+  }
+}
+
 function parse_view_url(url) {
   var msgId = url.match(/[\?|\&]message=(\d+)/);
   var type = url.match(/[\?|\&]type=([a-zA-Z0-9]+)/);
@@ -107,7 +122,7 @@ function parse_view_url(url) {
   };
 }
 
-function guessTimeFormat(time) {
+function guess_time_format(time) {
   if (typeof(time) !== 'string') {
     return GOLDEN_TIMEFMT;
   }
@@ -179,6 +194,26 @@ function on_options_value_changed(key) {
     else {
       utils.removeClass(document.body, 'ellab-collapsequickreply');
     }
+  }
+}
+
+function set_cache(key, value, time) {
+  if (lscache) {
+    return lscache.set(key, value, time || (14*60*24));
+  }
+}
+
+function get_cache(key, defaultValue) {
+  var result = null;
+  if (lscache) {
+    result = lscache.get(key);
+  }
+  return result || defaultValue;
+}
+
+function remove_cache(key) {
+  if (lscache) {
+    lscache.remove(key);
   }
 }
 
@@ -276,14 +311,12 @@ function topics_disable_sensor() {
 
 // populate meta data of this page
 function view_onready() {
-  var res = xpathl('//tr[contains(@id, "Thread_No")]/@id');
-  if (res && res.snapshotLength > 0) {
-    var threadNo = parseInt(res.snapshotItem(res.snapshotLength-1).value.match(/\d+/)[0], 10);
-    threadNo = isNaN(threadNo)?0:threadNo;
-    meta('thread-no', threadNo);
-    meta('curr-thread', threadNo);
+  g_threads = view_parse_thread_list();
+  if (g_threads.length > 0) {
+    meta('thread-no', g_threads[g_threads.length - 1].threadId);
+    meta('curr-thread', g_threads[g_threads.length - 1].threadId);
+    g_lastThreadNode = g_threads[g_threads.length - 1].node;
   }
-
   meta('title', document.title);
   var parsed = parse_view_url(document.location.href);
   if (parsed) {
@@ -311,7 +344,7 @@ function menubar(page) {
                   '  <div class="ellab-button" id="ellab-reload-btn"><a href="#" onclick="document.location.reload();return false;"><span>重載</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-blur-btn"><a href="#"><span>亮度</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-blockquote-btn"><a href="#"><span>顯示所有引用</span></a></div>' +
-                  '  <div class="ellab-button" id="ellab-tweet-btn"><a href="#"><span>Tweet</span></a></div>' +
+                  '  <div class="ellab-button" id="ellab-tweet-btn"><a href="#"><span>分享到 Twitter</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-options-btn"><a href="#"><span>設定</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-close-btn" style="display:none;"><a href="#"><span>關閉</span></a></div>' +
                   '</div>';
@@ -463,9 +496,8 @@ function view_add_golden_show_link() {
 
 // show '5 minutes ago', '9 hours ago' besides timestamp
 function view_smart_timestamp() {
-  xpathl('//tr[contains(@id, "Thread_No")]').each(function() {
-    var isThread0 = this.getAttribute('id') === 'Thread_No0';
-    var span = xpath('./td[2]/table/tbody/tr[3]/td/div' + (isThread0?'[2]':'') + '/span', this);
+  utils.each(g_threads, function() {
+    var span = this.timestampNode;
     if (span && span.getElementsByClassName('ellab-timestamp').length === 0) {
       // if not already has insert the smart timestamp tag
       if (span.textContent) {
@@ -482,7 +514,7 @@ function view_update_smart_timestamp() {
   xpathl('//span[contains(concat(" ", @class, " "), " ellab-timestamp ")]').each(function() {
     var timestamp = this.getAttribute('fromtime');
     if (timestamp) {
-      var time = moment(timestamp, this.getAttribute('timefmt') || guessTimeFormat(timestamp));
+      var time = moment(timestamp, this.getAttribute('timefmt') || guess_time_format(timestamp));
       if (typeof maxtime === 'undefined' || maxtime.diff(time) < 0) {
         maxtime = time;
       }
@@ -574,13 +606,12 @@ function view_check_more() {
 function view_check_more_check_content(t) {
   var parsed = view_parse_ajax(t);
   var i;
-
   var maxId = -1;
-  var res = t.match(/<tr id=\"Thread_No\d+/g);
+  var res = t.match(/href="post\.aspx\?mt=Y&rid=\d+/g);
   if (res) {
     for (i=0;i<res.length;i++) {
-      var res2 = res[i].match(/<tr id=\"Thread_No(\d+)/);
-      if (res2 && res2.length > 1) {
+      var res2 = res[i].match(/rid=(\d+)/);
+      if (res2) {
         var id = parseInt(res2[1], 10);
         if (!isNaN(id) && id > maxId) {
           maxId = id;
@@ -588,42 +619,27 @@ function view_check_more_check_content(t) {
       }
     }
   }
+  debug('view_check_more_check_content last thread id read from ajax=' + maxId);
   var currThread = meta_int('curr-thread', -1);
   var threadNo = meta_int('thread-no', -1);
   var noticeMsg = '';
-  //if (true || maxId > 0 && maxId > currThread) { threadNo = 1; currThread = 1;  // for testing only
+  // for testing only, replace the below line.  If force to have new message
+  //if (true || maxId > 0 && maxId > currThread) { threadNo = g_threads[0].threadId; currThread = g_threads[0].threadId;
   if (maxId > 0 && maxId > currThread) {
+    var newThreads = utils.grep(parsed.threads, function() { return this.node && this.threadId > threadNo; });
     if (maxId > threadNo) {
-      document.title = '(' + (maxId - threadNo) + ') ' + meta('title');
-      noticeMsg = (maxId - threadNo) + ' 個新回覆';
-      debug((maxId - threadNo) + ' more messages');
+      document.title = '(' + (newThreads.length) + ') ' + meta('title');
+      noticeMsg = (newThreads.length) + ' 個新回覆';
+      debug((newThreads.length) + ' more messages');
       change_favicon('NEW_MESSAGE');
     }
 
     // auto show new msg
-    t = extract(t, '<tr id="Thread_No' + (currThread + 1), '<div style="border: solid 1px #000000;">');
-    var currThreadElement = $('#Thread_No' + currThread);
-    var parent = utils.parent(currThreadElement, 'div');
-    var div = document.createElement('div');
-    div.innerHTML = '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 7px;">' +
-                    '  <tr>' +
-                    "    <td align = 'left'>" +
-                    '      <table class="repliers">' +
-                    '<tr id="Thread_No' + (currThread + 1) +
-                    t;
-    var parentTable = utils.parent(utils.parent(currThreadElement, 'table'), 'table');
-    if (parentTable) {
-      var nextSibling = parentTable.nextSibling;
-      for (i=0;i<div.childNodes.length;i++) {
-        var c = div.childNodes[i];
-        // only include the real reply, filter out google ad
-        if (xpath('.//tr[contains(@id, "Thread_No")]', c)) {
-          c.className += ' ellab-new-reply';
-          parent.insertBefore(c, nextSibling);
-        }
-      }
-    }
-
+    utils.each(newThreads, function() {
+      utils.addClass(this.node, 'ellab-new-reply');
+      utils.insertAfter(this.node, g_lastThreadNode);
+      g_lastThreadNode = this.node;
+    });
     meta('curr-thread', maxId);
 
     view_smart_timestamp();
@@ -707,6 +723,56 @@ function view_prevnextbar() {
   });
 }
 
+function view_parse_thread_list(doc) {
+  var threads = [];
+  $e('img[src="images\/quote.gif"]', function() {
+    var node = utils.parent(this, function() { return Sizzle.matchesSelector(this, 'table.repliers'); });
+    if (node) {
+      var tr = node.rows[node.rows.length - 1];
+      var nodeId = tr.getAttribute('id');
+      var userId = tr.getAttribute('userid');
+      var username = tr.getAttribute('username');
+      var threadId = this.parentNode.getAttribute("href");
+      threadId = threadId?threadId.match(/rid=(\d+)/):null;
+      threadId = threadId?threadId[1]:null;
+
+      var timestamp;
+      var timespan = $1('.repliers_right tr:last-child > td > div:last-child span:not([id]):last-child', node);
+      if (timespan && timespan.textContent) {
+        timestamp = moment(timespan.textContent, guess_time_format(timespan.textContent));
+      }
+
+      // the actual thread node is the container table
+      if (utils.parent(node, 'td', true) !== null) {
+        // the first thread (the original post) is different
+        // div
+        //   table.repliers
+        //     { first post }
+        //   table tr td
+        //     table.repliers
+        //       { reply }
+        //   table tr td
+        //     table.repliers
+        //       { reply }
+        node = utils.parent(node, 'table');
+      }
+
+      // if pass a doc, clone the node
+      threads.push({
+        threadId: threadId,
+        userId: userId,
+        username: username,
+        nodeId: nodeId,
+        node: doc?node.cloneNode(true):node,
+        timestamp: timestamp,
+        timestampNode: doc?timespan.cloneNode(true):timespan
+      });
+    }
+  }, null, doc);
+
+  return threads;
+}
+
 function view_parse_ajax(t) {
   var title = utils.trim(utils.extract(t, '<title>', '</title>'));
   var hasPrev = t.indexOf('src="images/button-prev.gif"') > 0;
@@ -725,37 +791,11 @@ function view_parse_ajax(t) {
     }
   }
 
-
-  // get the timestamp of thread0 (first post)
-  //
-  // thread0
-  // <tr id="Thread_No0" ...
-  // ...
-  // <table
-  // ...
-  // <span class="forum_taglabel"> ... </span>
-  // ...
-  // <span style="font-size: 12px; color:gray;"><!-- ... --> timestamp </span>
-  // ...
-  // </table>
-  var thread0 = utils.extract(utils.extract(utils.extract(t, '<tr id="Thread_No0"'), '<span class="forum_taglabel">', '</table>'), '</span>', '</span>');
-  var timestamp;
-  if (thread0) {
-    thread0 = thread0.match(/\d\d?\/\d\d?\/\d{4} \d\d?\:\d\d( [A|P]M)?/);
-    if (thread0) {
-      if (thread0.length > 1 && thread0[1]) {
-        // has AM/PM, new format
-        timestamp = moment(thread0[0], GOLDEN_TIMEFMT);
-      }
-      else {
-        // old format
-        timestamp = moment(thread0[0], GOLDEN_TIMEFMT_OLD);
-      }
-    }
-  }
+  var doc = createDocument(t);
+  var threads = view_parse_thread_list(doc);
 
   return {
-    threads: [ { id:0, timestamp:timestamp?timestamp.toDate():null }],
+    threads: threads,
     title: title,
     hasPrev: hasPrev,
     hasNext: hasNext,
@@ -915,135 +955,158 @@ function view_favicon() {
 
 function view_story_mode() {
   $e('.repliers_left', function() {
-    var userid = this.parentNode.getAttribute('userid');
-    if (userid) {
+    var userId = this.parentNode.getAttribute('userid');
+    if (userId) {
+      var cachedStoryCount = get_cache(view_story_mode_get_cache_key('count', userId));
+      var cachedStoryLastPage = get_cache(view_story_mode_get_cache_key('lastpage', userId));
+
       var div = document.createElement('div');
       div.className = 'ellab-story-mode-btn';
       var a = document.createElement('a');
       a.innerHTML = '睇故模式';
       a.href = '#';
-      a.setAttribute('userid', userid);
+      a.setAttribute('userid', userId);
       a.addEventListener('click', function(e) {
         view_story_mode_click(e.target.getAttribute('userid'));
         e.preventDefault();
         e.stopPropagation();
       }, false);
       div.appendChild(a);
+      if (cachedStoryLastPage) {
+        var divMsg = document.createElement('div');
+        divMsg.innerHTML = 'cache: ' + cachedStoryLastPage + ' 頁';
+        div.appendChild(divMsg);
+      }
       this.appendChild(div);
     }
   });
 }
 
-function view_story_mode_click(userid) {
-  $e('tr[id^="Thread_No"][userid!="' + userid + '"]', function() {
+function view_story_mode_get_cache_key(type, userId, page) {
+  if (type === 'page') {
+    return 'storymode-v1-' + meta('msg-id') + '-' + userId + '-' + page;
+  }
+  else if (type === 'count' || type === 'lastpage') {
+    return 'storymode-v1-' + meta('msg-id') + '-' + userId + '-' + type;
+  }
+}
+
+function view_story_mode_click(userId) {
+  // hide the unrelated threads in current page first;
+  $e('tr[userid][userid!="' + userId + '"]', function() {
     var parentTable = utils.parent(utils.parent(this, 'table'), 'table');
     if (parentTable) {
       parentTable.parentNode.removeChild(parentTable);
     }
   });
 
-  view_story_mode_page(userid, meta_int('curr-page') + 1);
+  remove_cache(view_story_mode_get_cache_key('count', userId));
+
+  // start getting next page
+  view_story_mode_page(userId, meta_int('curr-page') + 1);
 }
 
-function view_story_mode_page(userid, page) {
+function view_story_mode_page(userId, page) {
   view_notice('睇故模式 ﹣ 正在讀取第 ' + page + ' 頁');
 
-  var cacheKey = 'storymode-' + meta('msg-id') + '-' + userid + '-' + page;
+  var cacheKey = view_story_mode_get_cache_key('page', userId, page);
 
-  var cachedItem = lscache?lscache.get(cacheKey):null;
+  var cachedItem = get_cache(cacheKey);
   if (cachedItem) {
     debug('hit cache on page ' + page);
 
-    //if (cachedItem.text) {
-      //view_story_mode_page_check_content(userid, page, cachedItem.text);
+    var cacheIsGood = true;
     if (cachedItem.textz) {
-      view_story_mode_page_check_content(userid, page, Base64.btou(RawDeflate.inflate(cachedItem.textz)));
+      var parsed = view_parse_ajax(Base64.btou(RawDeflate.inflate(cachedItem.textz)));
+      if (parsed) {
+        if (!view_story_mode_page_check_content(userId, page, parsed)) {
+          // can't locate content but suppose to have, mainly due to page HTML changed but cache old HTML
+          cacheIsGood = false;
+        }
+      }
+      else {
+        // can't parse, the cache is corrupted
+        cacheIsGood = false;
+      }
     }
+  }
 
+  // get from server again if not cached, or cached but cannot recognize
+  if (cacheIsGood) {
     // cachedItem.hasNext should be always true, we won't cache the last page
-    view_story_mode_page(userid, page + 1);
+    set_cache(view_story_mode_get_cache_key('lastpage', userId), page);
+    view_story_mode_page(userId, page + 1);
+    return;
+  }
+
+  var url = document.location.href;
+  // append page to # means nothing
+  url = url.replace(/#.*$/, '');
+  if (url.match(/[\?|&]page=/)) {
+    url = url.replace(/page=\d+/, 'page=' + page);
   }
   else {
-    var url = document.location.href;
-    if (url.match(/[\?|&]page=/)) {
-      url = url.replace(/page=\d+/, 'page=' + page);
-    }
-    else {
-      url += '&page=' + page;
-    }
+    url += '&page=' + page;
+  }
 
-    debug('view_story_mode_page url=' + url);
-    utils.crossOriginXMLHttpRequest({
-      url: url,
-      method: 'get',
-      onload: function(response) {
-        var addedHTML = null;
-        var t = extract(response.responseText, '<table class="repliers">', '<div style="background-color: #336699; height: 9px; "></div>');
-        if (t) {
-          t = t.replace(/<div style="border: solid 1px #000000;">\s*$/, '');
-          t = '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 7px;"><tr><td>' + t;
-          addedHTML = view_story_mode_page_check_content(userid, page, t);
-        }
+  debug('view_story_mode_page url=' + url);
+  utils.crossOriginXMLHttpRequest({
+    url: url,
+    method: 'get',
+    onload: function(response) {
+      var parsed = view_parse_ajax(response.responseText);
+      if (!parsed) {
+        return;
+      }
 
-        var hasNext = view_parse_ajax(response.responseText).hasNext;
+      var addedHTML = view_story_mode_page_check_content(userId, page, parsed);
 
+      if (parsed.hasNext) {
         // set cache
-        if (lscache && hasNext) {
+        if (lscache) {
           // we won't cache the last page
           // also won't cache the text content if no thread is added for this page, to save space
           debug('set cache:' + cacheKey);
-          //lscache.set(cacheKey, { text:addedHTML, hasNext:hasNext });
-          lscache.set(cacheKey, { textz:RawDeflate.deflate(Base64.utob(addedHTML)), hasNext:hasNext });
+          set_cache(cacheKey, { textz:RawDeflate.deflate(Base64.utob(addedHTML)), hasNext:true });
+          set_cache(view_story_mode_get_cache_key('lastpage', userId), page);
         }
 
-        if (hasNext) {
-          // sleep for a while, seems will be blocked if too much requests
-          window.setTimeout(function() {
-            view_story_mode_page(userid, page + 1);
-          }, 3000);
-        }
-        else {
-          view_notice('睇故模式 ﹣ 完成讀取 ' + page + ' 頁');
-        }
+        // sleep for a while, seems will be blocked if too much requests
+        window.setTimeout(function() {
+          view_story_mode_page(userId, page + 1);
+        }, 3000);
       }
-    });
-  }
+      else {
+        view_notice('睇故模式 ﹣ 完成讀取 ' + page + ' 頁');
+      }
+    }
+  });
 }
 
-// return the appended HTML, null if no thread is appended
-function view_story_mode_page_check_content(userid, page, text) {
+// return the appended HTML, null/"" if no thread is appended
+function view_story_mode_page_check_content(userId, page, parsed) {
   var parentTable = utils.parent($1('table.repliers'), 'div');
   if (!parentTable) {
     return null;
   }
 
-  var parent = parentTable.parentNode;
-  var divTempHolder = document.createElement('div');
-  divTempHolder.innerHTML = text;
+  var stories = utils.grep(parsed.threads, function() { return this.userId == userId; });
+  debug(stories.length + ' stories found');
+  var cacheCountKey = view_story_mode_get_cache_key('count', userId);
+  set_cache(cacheCountKey, get_cache(cacheCountKey, 0) + stories.length);
+
   var divDest = document.createElement('div');
-  var firstThreadOfThisPage = true;
-  for (var i=0;i<divTempHolder.childNodes.length;i++) {
-    var c = divTempHolder.childNodes[i];
-    // only include the real reply, filter out google ad
-    // also only include same user
-    if (xpath('.//tr[contains(@id, "Thread_No")]', c) && xpath('.//tr[contains(@userid, "' + userid + '")]', c)) {
-      if (firstThreadOfThisPage) {
-        var divPageNum = document.createElement('div');
-        divPageNum.innerHTML = '<a href="javascript:changePage(' + page + ')">第 ' + page + ' 頁</a>';
-        parent.appendChild(divPageNum);
-        firstThreadOfThisPage = false;
-      }
-      divDest.appendChild(c);
+  utils.each(stories, function(i) {
+    if (i === 0) {
+      var divPageNum = document.createElement('div');
+      divPageNum.innerHTML = '<a href="javascript:changePage(' + page + ')">第 ' + page + ' 頁</a>';
+      parentTable.parentNode.insertBefore(divPageNum, $1('#newmessage'));
     }
-  }
-  divTempHolder = null;
+    divDest.appendChild(this.node);
+  });
+  parentTable.parentNode.insertBefore(divDest, $1('#newmessage'));
+  view_smart_timestamp();
 
-  if (divDest.innerHTML) {
-    parent.appendChild(divDest);
-    view_smart_timestamp();
-  }
-
-  // return true if some thread is matched
   return divDest.innerHTML;
 }
 
@@ -1123,6 +1186,10 @@ function init() {
   g_is_blur = (window.getComputedStyle(blurdetect, null).getPropertyValue('opacity') - 0.024 < 0.00001);
   document.body.removeChild(blurdetect);
   blurdetect = null;
+
+  if (lscache) {
+    lscache.setBucket('better-golden');
+  }
 
   if (document.location.href.match(/topics\.aspx/) ||
       document.location.href.match(/topics_.*\.htm/)) {
