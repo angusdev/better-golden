@@ -14,8 +14,8 @@
       "matches": ["http://*.hkgolden.com/*"],
       "all_frames": true,
       "run_at": "document_end",
-      "js": ["lib/sizzle-1.10.11.min.js", "lib/moment-1.7.2.min.js", "lib/moment-lang-zh-tw.js",
-             "lib/lscache-cfd89b7f7a.js",
+      "js": ["lib/sizzle-1.10.19.min.js", "lib/moment-2.6.0.min.js", "lib/moment-lang-zh-tw.js",
+             "lib/lscache-1.0.2.min.js",
             "lib/js-deflate/base64-2.11.js", "lib/js-deflate/rawdeflate-0.5.js", "lib/js-deflate/rawinflate-0.3.js",
              "ellab-utils-6.js", "golden.user.js"],
       "css": ["golden.css"]
@@ -24,7 +24,7 @@
   "options_page": "options.html",
   "content_security_policy": "script-src 'self' https://use.edgefonts.net/; object-src 'self'",
   "permissions": [ "storage", "tabs", "http://use.edgefonts.net/league-gothic.js" ],
-  "web_accessible_resources": ["lib/sizzle-1.10.11.min.map",
+  "web_accessible_resources": ["lib/sizzle-1.10.19.min.map",
                                "images/clock.png",
                                "images/golden-favicon.png", "images/golden-favicon-blank.png",
                                "images/new-message.png", "images/new-message-blank.png"]
