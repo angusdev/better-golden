@@ -9,4 +9,4 @@ Chrome: [Install from Chrome Web Store](https://chrome.google.com/webstore/detai
 
 Screenshot
 ----------
-![Better Golden](https://lh6.googleusercontent.com/qAA_uBCJKP_q_hAzK6y6OSkszKhHHhRmv346rjYw69_QN8oIuyRdwWEV1GPqOMgqhw5APmUc=s640-h400-e365-rw)
+![Better Golden](https://raw.githubusercontent.com/angusdev/better-golden/master/doc/golden-v1.0-main.png)
