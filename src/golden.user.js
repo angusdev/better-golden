@@ -13,6 +13,7 @@ var $e = org.ellab.utils.sizzleEach;
 
 var DEBUG = false;
 var PERFORMANCE = false;
+var AJAX_WAIT = 1000; // wait for each ajax call, golden will block too frequent requests
 
 var FAVICON = [{}, {}, {}];
 FAVICON[1].NEW_MESSAGE = utils.getResourceURL('new-message', 'images/new-message.png');
@@ -29,6 +30,7 @@ var g_options = {};
 var g_is_blur = false;  // is included the blur css
 var g_threads = [];
 var g_lastThreadNode;
+var g_ajaxQueue = [];
 
 function error(m) {
   if (console && typeof console.log !== undefined) {
@@ -95,6 +97,31 @@ function createDocument(obj) {
   }
   else {
     return obj;
+  }
+}
+
+function ajax_queue_worker() {
+  var task = g_ajaxQueue.shift();
+  if (task && task.url && task.callback) {
+    debug('ajax_queue_worker:' + task.url);
+
+    utils.crossOriginXMLHttpRequest({
+      url: task.url,
+      method: task.method || 'get',
+      data: task.data,
+      onload: function(response) {
+        try {
+          task.callback.call(this, response, task.args);
+        }
+        catch (err) {
+          error('exception in ajax_queue_worker:' + err);
+        }
+        window.setTimeout(ajax_queue_worker, AJAX_WAIT);
+      }
+    });
+  }
+  else {
+    window.setTimeout(ajax_queue_worker, AJAX_WAIT);
   }
 }
 
@@ -317,7 +344,10 @@ function view_onready() {
     meta('curr-thread', g_threads[g_threads.length - 1].threadId);
     g_lastThreadNode = g_threads[g_threads.length - 1].node;
   }
-  meta('title', document.title);
+
+  var title = view_parse_ajax_title(document.head.innerHTML) || document.title;
+  meta('title', title);
+
   var parsed = parse_view_url(document.location.href);
   if (parsed) {
     meta('server', parsed.forum);
@@ -364,7 +394,7 @@ function menubar(page) {
     $('#ellab-blur-btn').style.display = 'none';
   }
 
-  $('#ellab-menubar-title').innerHTML = utils.encodeHTML(document.title) + ' ' + utils.encodeHTML(document.title);
+  $('#ellab-menubar-title').innerHTML = utils.encodeHTML(meta('title'));
 
   function p_mark_as_read_helper() {
     xpathl('//*[contains(concat(" ", @class, " "), " ellab-new-reply ")]').each(function() {
@@ -735,6 +765,7 @@ function view_parse_thread_list(doc) {
       var threadId = this.parentNode.getAttribute("href");
       threadId = threadId?threadId.match(/rid=(\d+)/):null;
       threadId = threadId?threadId[1]:null;
+      var isFirstPost = threadId == 1;
 
       var timestamp;
       var timespan = $1('.repliers_right tr:last-child > td > div:last-child span:not([id]):last-child', node);
@@ -759,6 +790,7 @@ function view_parse_thread_list(doc) {
 
       // if pass a doc, clone the node
       threads.push({
+        isFirstPost: isFirstPost,
         threadId: threadId,
         userId: userId,
         username: username,
@@ -773,8 +805,8 @@ function view_parse_thread_list(doc) {
   return threads;
 }
 
-function view_parse_ajax(t) {
-  var title = utils.trim(utils.extract(t, '<title>', '</title>'));
+function view_parse_ajax(t, nodom) {
+  var title = view_parse_ajax_title(t);
   var hasPrev = t.indexOf('src="images/button-prev.gif"') > 0;
   var hasNext = t.indexOf('src="images/button-next.gif"') > 0;
   var lastPage;
@@ -791,8 +823,11 @@ function view_parse_ajax(t) {
     }
   }
 
-  var doc = createDocument(t);
-  var threads = view_parse_thread_list(doc);
+  var threads = null;
+  if (!nodom) {
+    var doc = createDocument(t);
+    threads = view_parse_thread_list(doc);
+  }
 
   return {
     threads: threads,
@@ -803,12 +838,16 @@ function view_parse_ajax(t) {
   };
 }
 
+function view_parse_ajax_title(t) {
+  return utils.trim(utils.extract(t, '<Attribute name="title">', '</Attribute>') || utils.extract(t, '<title>', '</title>'));
+}
+
+
 // 1. show the title of other golden message
 // 2. open golden meesage link in new tab
 // 3. change link to current server so don't need to login again
 function view_golden_message_link() {
-  // show the title of other golden message
-  function p_view_golden_message_link_ajax(a) {
+  function p_view_golden_message_link_add_queue(a) {
     var url = a.href;
     // get the first page for the post time
     if (url.match(/&page=\d+/)) {
@@ -817,25 +856,24 @@ function view_golden_message_link() {
     else {
       url += '&page=1';
     }
+    g_ajaxQueue.push({url:url, callback: p_view_golden_message_link_worker, args:a});
+  }
 
-    utils.crossOriginXMLHttpRequest({
-      url: url,
-      method: 'get',
-      onload: function(response) {
-        var parsed = view_parse_ajax(response.responseText);
-        if (parsed) {
-          a.innerHTML += ' ' + parsed.title;
-          if (parsed.threads && parsed.threads.length > 0 && parsed.threads[0].id === 0 && parsed.threads[0].timestamp) {
-            var span = document.createElement('span');
-            span.className = 'ellab-inline-timestamp ellab-timestamp';
-            span.setAttribute('strfmt', moment(parsed.threads[0].timestamp).lang('en').format(GOLDEN_TIMEFMT) + ' (%s)');
-            span.setAttribute('fromtime', moment(parsed.threads[0].timestamp).lang('en').format(GOLDEN_TIMEFMT));
-            utils.insertAfter(span, a);
-            view_update_smart_timestamp();
-          }
-        }
+  // show the title of other golden message
+  function p_view_golden_message_link_worker(response, a) {
+    var parsed = view_parse_ajax(response.responseText);
+    if (parsed) {
+      console.log(parsed);
+      a.innerHTML += ' ' + parsed.title;
+      if (parsed.threads && parsed.threads.length > 0 && parsed.threads[0].isFirstPost && parsed.threads[0].timestamp) {
+        var span = document.createElement('span');
+        span.className = 'ellab-inline-timestamp ellab-timestamp';
+        span.setAttribute('strfmt', moment(parsed.threads[0].timestamp).lang('en').format(GOLDEN_TIMEFMT) + ' (%s)');
+        span.setAttribute('fromtime', moment(parsed.threads[0].timestamp).lang('en').format(GOLDEN_TIMEFMT));
+        utils.insertAfter(span, a);
+        view_update_smart_timestamp();
       }
-    });
+    }
   }
 
   xpathl('//a[contains(@href, "hkgolden.com/view.aspx") and not(contains(@id, "changeLink"))]').each(function() {
@@ -843,7 +881,7 @@ function view_golden_message_link() {
     if (parsed.msgId && parsed.forum) {
       if (parsed.msgId != meta('msg-id')) {
         // other message, show title and open in new window
-        p_view_golden_message_link_ajax(this);
+        p_view_golden_message_link_add_queue(this);
         this.target = '_blank';
       }
       if (parsed.forum != meta('server')) {
@@ -1012,10 +1050,10 @@ function view_story_mode_page(userId, page) {
   var cacheKey = view_story_mode_get_cache_key('page', userId, page);
 
   var cachedItem = get_cache(cacheKey);
+  var cacheIsGood = true;
   if (cachedItem) {
     debug('hit cache on page ' + page);
 
-    var cacheIsGood = true;
     if (cachedItem.textz) {
       var parsed = view_parse_ajax(Base64.btou(RawDeflate.inflate(cachedItem.textz)));
       if (parsed) {
@@ -1074,7 +1112,7 @@ function view_story_mode_page(userId, page) {
         // sleep for a while, seems will be blocked if too much requests
         window.setTimeout(function() {
           view_story_mode_page(userId, page + 1);
-        }, 3000);
+        }, AJAX_WAIT);
       }
       else {
         view_notice('睇故模式 ﹣ 完成讀取 ' + page + ' 頁');
@@ -1207,6 +1245,8 @@ function init() {
       on_options_changed(changes);
     }
   });
+
+  ajax_queue_worker();
 }
 
 if (document.location.href.match(/topics\.aspx/) ||
