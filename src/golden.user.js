@@ -1050,10 +1050,11 @@ function view_story_mode_page(userId, page) {
   var cacheKey = view_story_mode_get_cache_key('page', userId, page);
 
   var cachedItem = get_cache(cacheKey);
-  var cacheIsGood = true;
+  var cacheIsGood = false;
   if (cachedItem) {
     debug('hit cache on page ' + page);
 
+    cacheIsGood = true;
     if (cachedItem.textz) {
       var parsed = view_parse_ajax(Base64.btou(RawDeflate.inflate(cachedItem.textz)));
       if (parsed) {
