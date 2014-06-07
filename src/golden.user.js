@@ -651,6 +651,7 @@ function view_check_more_check_content(t) {
   }
   debug('view_check_more_check_content last thread id read from ajax=' + maxId);
   var currThread = meta_int('curr-thread', -1);
+  debug('view_check_more_check_content currThread=' + currThread);
   var threadNo = meta_int('thread-no', -1);
   var noticeMsg = '';
   // for testing only, replace the below line.  If force to have new message
@@ -664,7 +665,8 @@ function view_check_more_check_content(t) {
       change_favicon('NEW_MESSAGE');
     }
 
-    // auto show new msg
+    // auto show new msg, skip those already shown
+    newThreads = utils.grep(parsed.threads, function() { return this.node && this.threadId > currThread; });
     utils.each(newThreads, function() {
       utils.addClass(this.node, 'ellab-new-reply');
       utils.insertAfter(this.node, g_lastThreadNode);
