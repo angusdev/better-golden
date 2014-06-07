@@ -17,7 +17,7 @@
       "js": ["lib/sizzle-1.10.19.min.js", "lib/moment-2.6.0.min.js", "lib/moment-lang-zh-tw.js",
              "lib/lscache-1.0.2.min.js",
             "lib/js-deflate/base64-2.11.js", "lib/js-deflate/rawdeflate-0.5.js", "lib/js-deflate/rawinflate-0.3.js",
-             "ellab-utils-6.js", "golden.user.js"],
+             "ellab-utils-6.js", "hoverintent.js", "golden.user.js"],
       "css": ["golden.css"]
     }
   ],

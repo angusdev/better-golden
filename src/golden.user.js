@@ -751,6 +751,19 @@ function view_prevnextbar() {
       }
     }
   });
+
+  new utils.ProgressHoverIntent(prev, {
+    text: '上一頁',
+    done: p_prev_page,
+    left: 20,
+    topOffset: -40
+  });
+  new utils.ProgressHoverIntent(next, {
+    text: '下一頁',
+    done: p_next_page,
+    right: 20,
+    topOffset: -40
+  });
 }
 
 function view_parse_thread_list(doc) {
