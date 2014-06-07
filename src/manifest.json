@@ -22,8 +22,7 @@
     }
   ],
   "options_page": "options.html",
-  "content_security_policy": "script-src 'self' https://use.edgefonts.net/; object-src 'self'",
-  "permissions": [ "storage", "tabs", "http://use.edgefonts.net/league-gothic.js" ],
+  "permissions": [ "storage", "tabs" ],
   "web_accessible_resources": ["lib/sizzle-1.10.19.min.map",
                                "images/clock.png",
                                "images/golden-favicon.png", "images/golden-favicon-blank.png",
