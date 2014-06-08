@@ -336,8 +336,19 @@ function topics_disable_sensor() {
   });
 }
 
-// populate meta data of this page
 function view_onready() {
+  // clear all setTimeout or setInterval
+  var timeoutId = window.setTimeout(function() {}, 0);
+  debug('clean window.setTimeOut id=' + timeoutId);
+  while (timeoutId--) {
+    window.clearTimeout(timeoutId);
+  }
+  var intervalId = window.setInterval(function() {}, 60000 * 100);
+  debug('clean window.setInterval id=' + intervalId);
+  do {
+    window.clearInterval(intervalId);
+  } while (intervalId--);
+
   g_threads = view_parse_thread_list();
   if (g_threads.length > 0) {
     meta('thread-no', g_threads[g_threads.length - 1].threadId);
@@ -679,6 +690,8 @@ function view_check_more_check_content(t) {
     // auto show new msg, skip those already shown
     newThreads = utils.grep(parsed.threads, function() { return this.node && this.threadId > currThread; });
     utils.each(newThreads, function() {
+      // remove script tags (most for ad)
+      utils.each(this.node.getElementsByTagName['script'], function() { utils.removeChild(this); });
       utils.addClass(this.node, 'ellab-new-reply');
       utils.insertAfter(this.node, g_lastThreadNode);
       g_lastThreadNode = this.node;
