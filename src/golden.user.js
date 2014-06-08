@@ -345,8 +345,8 @@ function view_onready() {
     g_lastThreadNode = g_threads[g_threads.length - 1].node;
   }
 
-  var title = view_parse_ajax_title(document.head.innerHTML) || document.title;
-  meta('title', title);
+  document.title = view_parse_ajax_title(document.head.innerHTML) || document.title;
+  meta('title', document.title);
 
   var parsed = parse_view_url(document.location.href);
   if (parsed) {
