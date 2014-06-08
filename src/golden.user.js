@@ -682,6 +682,7 @@ function view_check_more_check_content(t) {
       utils.addClass(this.node, 'ellab-new-reply');
       utils.insertAfter(this.node, g_lastThreadNode);
       g_lastThreadNode = this.node;
+      g_threads.push(this);
     });
     meta('curr-thread', maxId);
 
@@ -794,12 +795,6 @@ function view_parse_thread_list(doc) {
       threadId = threadId?threadId[1]:null;
       var isFirstPost = threadId == 1;
 
-      var timestamp;
-      var timespan = $1('.repliers_right tr:last-child > td > div:last-child span:not([id]):last-child', node);
-      if (timespan && timespan.textContent) {
-        timestamp = moment(timespan.textContent, guess_time_format(timespan.textContent));
-      }
-
       // the actual thread node is the container table
       if (utils.parent(node, 'td', true) !== null) {
         // the first thread (the original post) is different
@@ -815,6 +810,16 @@ function view_parse_thread_list(doc) {
         node = utils.parent(node, 'table');
       }
 
+      if (doc) {
+        node = node.cloneNode(true);
+      }
+
+      var timestamp;
+      var timespan = $1('.repliers_right tr:last-child > td > div:last-child span:not([id]):last-child', node);
+      if (timespan && timespan.textContent) {
+        timestamp = moment(timespan.textContent, guess_time_format(timespan.textContent));
+      }
+
       // if pass a doc, clone the node
       threads.push({
         isFirstPost: isFirstPost,
@@ -822,9 +827,9 @@ function view_parse_thread_list(doc) {
         userId: userId,
         username: username,
         nodeId: nodeId,
-        node: doc?node.cloneNode(true):node,
+        node: node,
         timestamp: timestamp,
-        timestampNode: doc?timespan.cloneNode(true):timespan
+        timestampNode: timespan
       });
     }
   }, null, doc);
