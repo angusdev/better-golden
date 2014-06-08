@@ -584,6 +584,15 @@ function view_remove_ad_empty_row() {
   });
 }
 
+function view_clean_content() {
+  // remove show_ads.js
+  $e('table.repliers', function() {
+    $e('script[src*="show_ads.js"], iframe[src*="yahoo_ad.aspx"]', function() {
+      utils.removeChild(utils.parent(this, 'table'));
+    }, null, this);
+  });
+}
+
 function view_clean_layout() {
   // make the notice box on the top smaller
   // golden.css to hide the title and only show the first line of body text (<strong/>)
@@ -617,6 +626,8 @@ function view_clean_layout() {
   $e('#ctl00_ContentPlaceHolder1_lb_CompanyMode, #ctl00_ContentPlaceHolder1_changeLink1', function() {
     utils.removeChild(utils.prevSibling(this, 'br'));
   });
+
+  view_clean_content();
 }
 
 // setup the timer to check more replies
@@ -674,6 +685,7 @@ function view_check_more_check_content(t) {
     });
     meta('curr-thread', maxId);
 
+    view_clean_content();
     view_smart_timestamp();
     view_expand_youtube();
   }
@@ -878,7 +890,6 @@ function view_golden_message_link() {
   function p_view_golden_message_link_worker(response, a) {
     var parsed = view_parse_ajax(response.responseText);
     if (parsed) {
-      console.log(parsed);
       a.innerHTML += ' ' + parsed.title;
       if (parsed.threads && parsed.threads.length > 0 && parsed.threads[0].isFirstPost && parsed.threads[0].timestamp) {
         var span = document.createElement('span');
