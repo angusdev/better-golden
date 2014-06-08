@@ -23,6 +23,7 @@ org.ellab.utils.HoverIntent = function(ele, params) {
   // 20 = done
   this.status = 0;
   this.intervalID = null;
+  this.inFocus = document.hasFocus();
 
   this.reset = function() {
     this.lastx = -1;
@@ -47,7 +48,20 @@ org.ellab.utils.HoverIntent = function(ele, params) {
       this.p[k] = params[k];
     }
 
+    function handleOut() {
+      if (instance.status >= 20) {
+        return;
+      }
+      instance.reset();
+      if (instance.status >= 10 && instance.p.cancel) {
+        instance.p.cancel.call(ele);
+      }
+    }
+
     ele.addEventListener('mousemove', function(e) {
+      if (!instance.inFocus) {
+        return;
+      }
       if (instance.status >= 20) {
         return;
       }
@@ -55,22 +69,33 @@ org.ellab.utils.HoverIntent = function(ele, params) {
         instance.lastMouseStay = new Date().getTime();
         instance.lastx = e.clientX;
         instance.lasty = e.clientY;
-        instance.status = 0;
-        if (instance.p.cancel) {
+        if (instance.status >= 10 && instance.p.cancel) {
           instance.p.cancel.call(ele);
         }
+        instance.status = 0;
       }
     }, false);
 
-    ele.addEventListener('mouseout', function(e) {
-      if (instance.status >= 20) {
-        return;
+    ele.addEventListener('mouseout', handleOut, false);
+
+    try {
+      window.top.addEventListener('blur', function() {
+        instance.inFocus = false;
+        handleOut();
+      }, false);
+
+      window.top.addEventListener('focus', function() {
+        instance.inFocus = true;
+      }, false);
+    }
+    catch (err) {
+      if (window.console && window.console.log) {
+        instance.inFocus = true;
+        if (instance.inFocus) {
+          window.console.log("[HoverIntent] cannot set focus listener, cannot disable HoverIntent event if lost focus");
+        }
       }
-      instance.reset();
-      if (instance.p.cancel) {
-        instance.p.cancel.call(ele);
-      }
-    }, false);
+    }
 
     this.intervalID = window.setInterval(function() {
       if (instance.status >= 20) {
