@@ -1036,32 +1036,32 @@ function view_favicon() {
 }
 
 function view_story_mode() {
-  $e('.repliers_left', function() {
-    var userId = this.parentNode.getAttribute('userid');
-    if (userId) {
-      var cachedStoryCount = get_cache(view_story_mode_get_cache_key('count', userId));
-      var cachedStoryLastPage = get_cache(view_story_mode_get_cache_key('lastpage', userId));
+  if (g_threads.length > 0 && g_threads[0].isFirstPost && g_threads[0].userId) {
+    var thread = g_threads[0];
+    var userId = thread.userId;
 
-      var div = document.createElement('div');
-      div.className = 'ellab-story-mode-btn';
-      var a = document.createElement('a');
-      a.innerHTML = '睇故模式';
-      a.href = '#';
-      a.setAttribute('userid', userId);
-      a.addEventListener('click', function(e) {
-        view_story_mode_click(e.target.getAttribute('userid'));
-        e.preventDefault();
-        e.stopPropagation();
-      }, false);
-      div.appendChild(a);
-      if (cachedStoryLastPage) {
-        var divMsg = document.createElement('div');
-        divMsg.innerHTML = 'cache: ' + cachedStoryLastPage + ' 頁';
-        div.appendChild(divMsg);
-      }
-      this.appendChild(div);
+    var cachedStoryCount = get_cache(view_story_mode_get_cache_key('count', userId));
+    var cachedStoryLastPage = get_cache(view_story_mode_get_cache_key('lastpage', userId));
+
+    var div = document.createElement('div');
+    div.className = 'ellab-story-mode-btn';
+    var a = document.createElement('a');
+    a.innerHTML = '睇故模式';
+    a.href = '#';
+    a.setAttribute('userid', userId);
+    a.addEventListener('click', function(e) {
+      view_story_mode_click(e.target.getAttribute('userid'));
+      e.preventDefault();
+      e.stopPropagation();
+    }, false);
+    div.appendChild(a);
+    if (cachedStoryLastPage) {
+      var divMsg = document.createElement('div');
+      divMsg.innerHTML = 'cache: ' + cachedStoryLastPage + ' 頁';
+      div.appendChild(divMsg);
     }
-  });
+    $1('.repliers_left', thread.node).appendChild(div);
+  }
 }
 
 function view_story_mode_get_cache_key(type, userId, page) {
