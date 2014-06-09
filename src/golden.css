@@ -225,6 +225,18 @@ a.novisited:hover {
 .ellab-story-mode-btn a:visited {
   color: blue;
 }
+.ellab-message-history-visited {
+  color: purple;
+}
+.ellab-message-history-currpage {
+  color: red;
+}
+.ellab-message-history-maxpage {
+  color: green;
+}
+.ellab-message-history-oldpage {
+  color: #ccc;
+}
 
 .hover-progress {
   background-color: white;

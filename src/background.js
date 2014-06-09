@@ -69,6 +69,57 @@ function message_get_options(request, sender, sendResponse) {
   return true;
 }
 
+function get_message_history_helper(request, sender, callback) {
+  chrome.storage.sync.get(['messagehistory'], function(obj) {
+    if (callback) {
+      callback.apply(obj.messagehistory);
+    }
+  });
+}
+
+function message_get_message_history(request, sender, sendResponse) {
+  get_message_history_helper(request, sender, function() {
+    sendResponse( { success:true, messagehistory: this });
+  });
+
+  return true;
+}
+
+function message_add_message_history(request, sender, sendResponse) {
+  get_message_history_helper(request, sender, function() {
+    var cacheExpiry = 86400 * 1000 * 30;
+    var maxCacheItem = 1000;
+
+    var now = new Date().getTime();
+    var data = this || [];
+    var prevMaxPage = 0;
+    // clean up cache
+    for (var i=0; i<data.length; i++) {
+      if (data[i].msgId === request.msg.msgId) {
+        prevMaxPage = data[i].maxPage || 0;
+        data.splice(i--, 1);
+      }
+      else if (now - data[i].timestamp >= cacheExpiry) {
+        data.splice(i--, 1);
+      }
+    }
+    if (data.length >= maxCacheItem) {
+      data.splice(0, maxCacheItem / 10);
+    }
+    data.push({
+                version: 1,
+                msgId: request.msg.msgId,
+                currPage: request.msg.pageNum,
+                maxPage: Math.max(request.msg.pageNum, prevMaxPage),
+                timestamp: now
+              });
+    chrome.storage.sync.set( { messagehistory:data } );
+    sendResponse( { success:true, messagehistory: data });
+  });
+
+  return true;
+}
+
 chrome.extension.onMessage.addListener(
   function(request, sender, sendResponse) {
     try {
@@ -85,6 +136,12 @@ chrome.extension.onMessage.addListener(
         chrome.storage.local.set(request.newOptions);
         sendResponse({ success:true });
         return false;
+      }
+      else if (request.msgId === 'get_message_history') {
+        return message_get_message_history(request, sender, sendResponse);
+      }
+      else if (request.msgId === 'add_message_history') {
+        return message_add_message_history(request, sender, sendResponse);
       }
       else if (request.msgId === 'get_tabs_url') {
         var urls = [];

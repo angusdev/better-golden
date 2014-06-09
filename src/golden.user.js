@@ -128,12 +128,16 @@ function ajax_queue_worker() {
 function parse_view_url(url) {
   var msgId = url.match(/[\?|\&]message=(\d+)/);
   var type = url.match(/[\?|\&]type=([a-zA-Z0-9]+)/);
+  var pageNum = url.match(/[\?|\&]page=(\d+)/);
   var forum = url.match(/^https?\:\/\/forum(\d+)\.hkgolden\.com\//);
   if (msgId) {
     msgId = parseInt(msgId[1], 10);
   }
   if (type) {
     type = type[1];
+  }
+  if (pageNum) {
+    pageNum = pageNum[1];
   }
   if (forum) {
     forum = forum[1];
@@ -145,6 +149,7 @@ function parse_view_url(url) {
   return {
     forum: forum,
     type: type,
+    pageNum: pageNum,
     msgId: msgId
   };
 }
@@ -272,6 +277,40 @@ function topics_open_link_new_window() {
   });
 }
 
+function topics_message_history() {
+  chrome.extension.sendMessage({msgId: 'get_message_history'}, function(response) {
+    if (response && response.success) {
+      var map = {};
+      utils.each(response.messagehistory, function() {
+        map[this.msgId] = this;
+      });
+
+      $e('a[href*="view.aspx"]', function() {
+        var parsed = parse_view_url(this.getAttribute('href'));
+        if (parsed) {
+          var mapped = map[parsed.msgId];
+          if (mapped) {
+            if (!parsed.pageNum) {
+              utils.addClass(this, 'ellab-message-history-visited');
+              // this.parentNode.innerHTML += ' [<a href="#">' + mapped.currPage + ']</a>' +
+                                           // ' / [<a href="#">' + mapped.maxPage + ']</a>';
+            }
+            else if (parsed.pageNum == mapped.currPage) {
+              utils.addClass(this, 'ellab-message-history-currpage');
+            }
+            else if (parsed.pageNum < mapped.maxPage) {
+              utils.addClass(this, 'ellab-message-history-oldpage');
+            }
+            else if (parsed.pageNum == mapped.maxPage) {
+              utils.addClass(this, 'ellab-message-history-maxpage');
+            }
+          }
+        }
+      });
+    }
+  });
+}
+
 function topics_opened_tabs() {
   // iterate the topic list to see if it matches the tab url
   function p_topics_opened_tabs(parsed) {
@@ -363,6 +402,9 @@ function view_onready() {
   if (parsed) {
     meta('server', parsed.forum);
     meta('msg-id', parsed.msgId);
+
+    chrome.extension.sendMessage({msgId: 'add_message_history', msg: { msgId:parsed.msgId, pageNum: parsed.pageNum }});
+
   }
   meta('golden-show-url', 'http://ellab.org/goldenshow.php#hkg' + meta('server') + '/' + meta('msg-id'));
 
@@ -1206,6 +1248,8 @@ function topics() {
   time = performance('topics_open_link_new_window', time);
   topics_disable_sensor();
   time = performance('topics_disable_sensor', time);
+  topics_message_history()
+  time = performance('topics_message_history', time);
   //topics_opened_tabs();
   //time = performance('topics_opened_tabs', time);
   //window.setInterval(function() {
