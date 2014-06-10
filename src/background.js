@@ -88,7 +88,7 @@ function message_get_message_history(request, sender, sendResponse) {
 function message_add_message_history(request, sender, sendResponse) {
   get_message_history_helper(request, sender, function() {
     var cacheExpiry = 86400 * 1000 * 30;
-    var maxCacheItem = 1000;
+    var maxCacheItem = 300;
 
     var now = new Date().getTime();
     var data = this || [];
