@@ -448,6 +448,7 @@ function menubar(page) {
   }
 
   $('#ellab-menubar-title').innerHTML = utils.encodeHTML(meta('title'));
+  $('#ellab-menubar-title').setAttribute('title', utils.encodeHTML(meta('title')));
 
   function p_mark_as_read_helper() {
     xpathl('//*[contains(concat(" ", @class, " "), " ellab-new-reply ")]').each(function() {
