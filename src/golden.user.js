@@ -125,6 +125,23 @@ function ajax_queue_worker() {
   }
 }
 
+function animate_scroll_to(scrollTo, interval) {
+  var start = new Date().getTime();
+  var startY = window.scrollY;
+
+  function scroller() {
+    var now = new Date().getTime();
+    if (now - start >= interval) {
+      window.scrollTo(0, scrollTo);
+    }
+    else {
+      window.scrollTo(0, Math.min(scrollTo, startY + (scrollTo - startY) * (now - start) / interval));
+      window.setTimeout(scroller, 10);
+    }
+  }
+  window.setTimeout(scroller, 20);
+}
+
 function parse_view_url(url) {
   var msgId = url.match(/[\?|\&]message=(\d+)/);
   var type = url.match(/[\?|\&]type=([a-zA-Z0-9]+)/);
@@ -463,7 +480,7 @@ function menubar(page) {
   // mark as read button
   utils.detectScroll(function(pos) {
     if (option_equal('scrollmarkread', true)) {
-      if (pos === 'bottom' && meta_int('curr-page') == meta_int('last-page')) {
+      if (pos === 'bottom') {
         p_mark_as_read_helper();
       }
     }
@@ -742,9 +759,7 @@ function view_check_more_check_content(t) {
     });
     meta('curr-thread', maxId);
 
-    view_clean_content();
-    view_smart_timestamp();
-    view_expand_youtube();
+    view_on_new_thread_load();
   }
 
   if (parsed.hasNext) {
@@ -1080,30 +1095,32 @@ function view_favicon() {
 
 function view_story_mode() {
   if (g_threads.length > 0 && g_threads[0].isFirstPost && g_threads[0].userId) {
-    var thread = g_threads[0];
-    var userId = thread.userId;
+    var userId = g_threads[0].userId;
 
     var cachedStoryCount = get_cache(view_story_mode_get_cache_key('count', userId));
     var cachedStoryLastPage = get_cache(view_story_mode_get_cache_key('lastpage', userId));
 
-    var div = document.createElement('div');
-    div.className = 'ellab-story-mode-btn';
-    var a = document.createElement('a');
-    a.innerHTML = '睇故模式';
-    a.href = '#';
-    a.setAttribute('userid', userId);
-    a.addEventListener('click', function(e) {
-      view_story_mode_click(e.target.getAttribute('userid'));
-      e.preventDefault();
-      e.stopPropagation();
-    }, false);
-    div.appendChild(a);
-    if (cachedStoryLastPage) {
-      var divMsg = document.createElement('div');
-      divMsg.innerHTML = 'cache: ' + cachedStoryLastPage + ' 頁';
-      div.appendChild(divMsg);
-    }
-    $1('.repliers_left', thread.node).appendChild(div);
+    utils.each(utils.grep(g_threads, function() { return this.userId === userId; }), function() {
+      var div = document.createElement('div');
+      div.className = 'ellab-story-mode-btn';
+      var a = document.createElement('a');
+      a.innerHTML = '睇故模式';
+      a.href = '#';
+      a.setAttribute('userid', userId);
+      a.addEventListener('click', function(e) {
+        view_story_mode_click(e.target.getAttribute('userid'));
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+      div.appendChild(a);
+      if (cachedStoryLastPage) {
+        var divMsg = document.createElement('div');
+        divMsg.innerHTML = 'cache: ' + cachedStoryLastPage + ' 頁';
+        meta('story-lastpage', cachedStoryLastPage);
+        div.appendChild(divMsg);
+      }
+      $1('.repliers_left', this.node).appendChild(div);
+    });
   }
 }
 
@@ -1127,6 +1144,9 @@ function view_story_mode_click(userId) {
 
   remove_cache(view_story_mode_get_cache_key('count', userId));
 
+  // hide the prev/next bar
+  $e('.ellab-prevnext-bar', function() { this.style.display = 'none'; });
+
   // start getting next page
   view_story_mode_page(userId, meta_int('curr-page') + 1);
 }
@@ -1145,6 +1165,7 @@ function view_story_mode_page(userId, page) {
     if (cachedItem.textz) {
       var parsed = view_parse_ajax(Base64.btou(RawDeflate.inflate(cachedItem.textz)));
       if (parsed) {
+        parsed.hasNext = cachedItem.hasNext;
         if (!view_story_mode_page_check_content(userId, page, parsed)) {
           // can't locate content but suppose to have, mainly due to page HTML changed but cache old HTML
           cacheIsGood = false;
@@ -1187,6 +1208,13 @@ function view_story_mode_page(userId, page) {
 
       var addedHTML = view_story_mode_page_check_content(userId, page, parsed);
 
+      if (addedHTML) {
+        if (page == meta_int('story-lastpage', -1) + 1) {
+          var scrollTo = utils.calcOffsetTop(utils.prevSibling($1('.ellab-new-reply').parentNode, 'div')) - $('#ellab-menubar').clientHeight;
+          animate_scroll_to(scrollTo, 500);
+        }
+      }
+
       if (parsed.hasNext) {
         // set cache
         if (lscache) {
@@ -1204,6 +1232,7 @@ function view_story_mode_page(userId, page) {
       }
       else {
         view_notice('睇故模式 ﹣ 完成讀取 ' + page + ' 頁');
+        meta('story-lastpage', page);
       }
     }
   });
@@ -1229,11 +1258,28 @@ function view_story_mode_page_check_content(userId, page, parsed) {
       parentTable.parentNode.insertBefore(divPageNum, $1('#newmessage'));
     }
     divDest.appendChild(this.node);
+    g_threads.push(this);
   });
-  parentTable.parentNode.insertBefore(divDest, $1('#newmessage'));
-  view_smart_timestamp();
 
-  return divDest.innerHTML;
+  // need to store the HTML otherwise the HTML will include the new ellab-new-reply
+  var addedHTML = divDest.innerHTML;
+
+  if (page >= meta_int('story-lastpage', 0)) {
+    utils.each(stories, function() {
+      utils.addClass(this.node, 'ellab-new-reply');
+    });
+  }
+
+  parentTable.parentNode.insertBefore(divDest, $1('#newmessage'));
+  view_on_new_thread_load();
+
+  return addedHTML;
+}
+
+function view_on_new_thread_load() {
+  view_clean_content();
+  view_smart_timestamp();
+  view_expand_youtube();
 }
 
 function topics() {

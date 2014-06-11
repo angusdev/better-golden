@@ -388,14 +388,23 @@ org.ellab.utils.parent = function(node, tagOrCallback, immediateParentOnly) {
 };
 
 // iterate the parent nodes until match the tag name
-org.ellab.utils.prevSibling = function(node, tag) {
+org.ellab.utils.prevSibling = function(node, tagOrCallback, immediateSiblingOnly) {
   if (!node) return node;
 
   var prevSibling = node.previousSibling;
 
-  if (prevSibling.nodeType !== 3 && (!prevSibling || !prevSibling.tagName || prevSibling.tagName.toUpperCase() == tag.toUpperCase())) return prevSibling;
+  if (!prevSibling || !tagOrCallback) return prevSibling;
 
-  return this.prevSibling(prevSibling, tag);
+  if (typeof tagOrCallback === 'string' && prevSibling.nodeType !== 3 && prevSibling.tagName && prevSibling.tagName.toUpperCase() == tagOrCallback.toUpperCase()) return prevSibling;
+
+  if (typeof tagOrCallback === 'function' && tagOrCallback.apply(prevSibling)) return prevSibling;
+
+  if (immediateSiblingOnly) {
+    return null;
+  }
+  else {
+    return this.prevSibling(prevSibling, tagOrCallback, immediateSiblingOnly);
+  }
 };
 
 org.ellab.utils.removeChild = function(node) {
