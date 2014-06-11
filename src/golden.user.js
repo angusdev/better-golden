@@ -1103,16 +1103,7 @@ function view_story_mode() {
     utils.each(utils.grep(g_threads, function() { return this.userId === userId; }), function() {
       var div = document.createElement('div');
       div.className = 'ellab-story-mode-btn';
-      var a = document.createElement('a');
-      a.innerHTML = '睇故模式';
-      a.href = '#';
-      a.setAttribute('userid', userId);
-      a.addEventListener('click', function(e) {
-        view_story_mode_click(e.target.getAttribute('userid'));
-        e.preventDefault();
-        e.stopPropagation();
-      }, false);
-      div.appendChild(a);
+      div.innerHTML = '<a href="#" data-role="story-mode-view" data-userid="' + userId + '">睇故模式</a>';
       if (cachedStoryLastPage) {
         var divMsg = document.createElement('div');
         divMsg.innerHTML = 'cache: ' + cachedStoryLastPage + ' 頁';
@@ -1122,6 +1113,14 @@ function view_story_mode() {
       $1('.repliers_left', this.node).appendChild(div);
     });
   }
+
+  $e('[data-role="story-mode-view"]', function() {
+    this.addEventListener('click', function(e) {
+      view_story_mode_click(e.target.getAttribute('data-userid'));
+      e.preventDefault();
+      e.stopPropagation();
+    }, false);
+  });
 }
 
 function view_story_mode_get_cache_key(type, userId, page) {
