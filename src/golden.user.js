@@ -14,6 +14,7 @@ var $e = org.ellab.utils.sizzleEach;
 var DEBUG = false;
 var PERFORMANCE = false;
 var AJAX_WAIT = 1000; // wait for each ajax call, golden will block too frequent requests
+var AJAX_COOLOFF = 60000;
 
 var FAVICON = [{}, {}, {}];
 FAVICON[1].NEW_MESSAGE = utils.getResourceURL('new-message', 'images/new-message.png');
@@ -1097,8 +1098,8 @@ function view_story_mode() {
   if (g_threads.length > 0 && g_threads[0].isFirstPost && g_threads[0].userId) {
     var userId = g_threads[0].userId;
 
-    var cachedStoryCount = get_cache(view_story_mode_get_cache_key('count', userId));
-    var cachedStoryLastPage = get_cache(view_story_mode_get_cache_key('lastpage', userId));
+    var cachedStoryCount = get_cache(view_story_mode_get_cache_key('count'));
+    var cachedStoryLastPage = get_cache(view_story_mode_get_cache_key('lastpage'));
 
     utils.each(utils.grep(g_threads, function() { return this.userId === userId; }), function() {
       var div = document.createElement('div');
@@ -1126,10 +1127,10 @@ function view_story_mode() {
   $e('[data-role="story-mode-clear-cache"]', function() {
     this.addEventListener('click', function(e) {
       for (var i=1 ; i<=41 ; i++) {
-        remove_cache(view_story_mode_get_cache_key('page', e.target.getAttribute('data-userid'), i));
+        remove_cache(view_story_mode_get_cache_key('page', i));
       }
-      remove_cache(view_story_mode_get_cache_key('count', e.target.getAttribute('data-userid')));
-      remove_cache(view_story_mode_get_cache_key('lastpage', e.target.getAttribute('data-userid')));
+      remove_cache(view_story_mode_get_cache_key('count'));
+      remove_cache(view_story_mode_get_cache_key('lastpage'));
       document.location.reload();
       e.preventDefault();
       e.stopPropagation();
@@ -1137,12 +1138,12 @@ function view_story_mode() {
   });
 }
 
-function view_story_mode_get_cache_key(type, userId, page) {
+function view_story_mode_get_cache_key(type, page) {
   if (type === 'page') {
-    return 'storymode-v1-' + meta('msg-id') + '-' + userId + '-' + page;
+    return 'storymode-v1-' + meta('msg-id') + '-' + page;
   }
   else if (type === 'count' || type === 'lastpage') {
-    return 'storymode-v1-' + meta('msg-id') + '-' + userId + '-' + type;
+    return 'storymode-v1-' + meta('msg-id') + '-' + type;
   }
 }
 
@@ -1167,7 +1168,7 @@ function view_story_mode_click(userId) {
 function view_story_mode_page(userId, page) {
   view_notice('睇故模式 ﹣ 正在讀取第 ' + page + ' 頁');
 
-  var cacheKey = view_story_mode_get_cache_key('page', userId, page);
+  var cacheKey = view_story_mode_get_cache_key('page', page);
 
   var cachedItem = get_cache(cacheKey);
   var cacheIsGood = false;
@@ -1194,7 +1195,7 @@ function view_story_mode_page(userId, page) {
   // get from server again if not cached, or cached but cannot recognize
   if (cacheIsGood) {
     // cachedItem.hasNext should be always true, we won't cache the last page
-    set_cache(view_story_mode_get_cache_key('lastpage', userId), page);
+    set_cache(view_story_mode_get_cache_key('lastpage'), page);
     view_story_mode_page(userId, page + 1);
     return;
   }
@@ -1216,6 +1217,14 @@ function view_story_mode_page(userId, page) {
     onload: function(response) {
       var parsed = view_parse_ajax(response.responseText);
       if (!parsed) {
+
+        if (response.responseText.indexOf('<html>') < 0) {
+          // seems blocked, wait longer
+          window.setTimeout(function() {
+            view_story_mode_page(userId, page);
+          }, AJAX_COOLOFF);
+        }
+
         return;
       }
 
@@ -1235,7 +1244,7 @@ function view_story_mode_page(userId, page) {
           // also won't cache the text content if no thread is added for this page, to save space
           debug('set cache:' + cacheKey);
           set_cache(cacheKey, { textz:RawDeflate.deflate(Base64.utob(addedHTML)), hasNext:true });
-          set_cache(view_story_mode_get_cache_key('lastpage', userId), page);
+          set_cache(view_story_mode_get_cache_key('lastpage'), page);
         }
 
         // sleep for a while, seems will be blocked if too much requests
@@ -1260,7 +1269,7 @@ function view_story_mode_page_check_content(userId, page, parsed) {
 
   var stories = utils.grep(parsed.threads, function() { return this.userId == userId; });
   debug(stories.length + ' stories found');
-  var cacheCountKey = view_story_mode_get_cache_key('count', userId);
+  var cacheCountKey = view_story_mode_get_cache_key('count');
   set_cache(cacheCountKey, get_cache(cacheCountKey, 0) + stories.length);
 
   var divDest = document.createElement('div');
