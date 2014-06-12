@@ -1095,21 +1095,24 @@ function view_favicon() {
 }
 
 function view_story_mode() {
-  if (g_threads.length > 0 && g_threads[0].isFirstPost && g_threads[0].userId) {
-    var userId = g_threads[0].userId;
+  var cache = view_story_mode_cache.get();
+  var userId = cache.userId;
+  if (!userId) {
+    if (g_threads.length > 0 && g_threads[0].isFirstPost) {
+      userId = g_threads[0].userId;
+    }
+  }
 
-    var cachedStoryCount = get_cache(view_story_mode_get_cache_key('count'));
-    var cachedStoryLastPage = get_cache(view_story_mode_get_cache_key('lastpage'));
-
+  if (userId) {
     utils.each(utils.grep(g_threads, function() { return this.userId === userId; }), function() {
       var div = document.createElement('div');
       div.className = 'ellab-story-mode-btn';
       div.innerHTML = '<a href="#" data-role="story-mode-view" data-userid="' + userId + '">睇故模式</a>';
-      if (cachedStoryLastPage) {
+      if (cache.lastpage) {
         var divMsg = document.createElement('div');
-        divMsg.innerHTML = 'cache: ' + cachedStoryLastPage + ' 頁 (' +
+        divMsg.innerHTML = 'cache: ' + cache.lastpage + ' 頁 (' +
                            '<a href="#" data-role="story-mode-clear-cache" data-userid="' + userId + '">清除</a>)';
-        meta('story-lastpage', cachedStoryLastPage);
+        meta('story-lastpage', cache.lastpage);
         div.appendChild(divMsg);
       }
       $1('.repliers_left', this.node).appendChild(div);
@@ -1126,11 +1129,7 @@ function view_story_mode() {
 
   $e('[data-role="story-mode-clear-cache"]', function() {
     this.addEventListener('click', function(e) {
-      for (var i=1 ; i<=41 ; i++) {
-        remove_cache(view_story_mode_get_cache_key('page', i));
-      }
-      remove_cache(view_story_mode_get_cache_key('count'));
-      remove_cache(view_story_mode_get_cache_key('lastpage'));
+      view_story_mode_cache.clear();
       document.location.reload();
       e.preventDefault();
       e.stopPropagation();
@@ -1138,14 +1137,43 @@ function view_story_mode() {
   });
 }
 
-function view_story_mode_get_cache_key(type, page) {
-  if (type === 'page') {
-    return 'storymode-v1-' + meta('msg-id') + '-' + page;
+var view_story_mode_cache = {
+  key: function(page) {
+    if (typeof page !== 'undefined') {
+      return 'storymode-v1-' + meta('msg-id') + '-' + page;
+    }
+    else {
+      return 'storymode-v1-' + meta('msg-id');
+    }
+  },
+
+  get: function(page) {
+    if (typeof page !== 'undefined') {
+      return get_cache(view_story_mode_cache.key(page));
+    }
+    else {
+      return get_cache(view_story_mode_cache.key()) || { count: 0, lastpage: 0, userId:null };
+    }
+  },
+
+  set: function(key, value) {
+    var cache = view_story_mode_cache.get();
+    cache[key] = value;
+    set_cache(view_story_mode_cache.key(), cache);
+  },
+
+  set_page: function(page, obj) {
+    set_cache(view_story_mode_cache.key(page), obj);
+  },
+
+  clear: function() {
+    for (var i=1 ; i<=41 ; i++) {
+      remove_cache(view_story_mode_cache.key(i));
+    }
+    remove_cache(view_story_mode_cache.key());
   }
-  else if (type === 'count' || type === 'lastpage') {
-    return 'storymode-v1-' + meta('msg-id') + '-' + type;
-  }
-}
+
+};
 
 function view_story_mode_click(userId) {
   // hide the unrelated threads in current page first;
@@ -1156,10 +1184,11 @@ function view_story_mode_click(userId) {
     }
   });
 
-  remove_cache(view_story_mode_get_cache_key('count', userId));
-
   // hide the prev/next bar
   $e('.ellab-prevnext-bar', function() { this.style.display = 'none'; });
+
+  view_story_mode_cache.set('count', 0);
+  view_story_mode_cache.set('userId', userId);
 
   // start getting next page
   view_story_mode_page(userId, meta_int('curr-page') + 1);
@@ -1168,18 +1197,16 @@ function view_story_mode_click(userId) {
 function view_story_mode_page(userId, page) {
   view_notice('睇故模式 ﹣ 正在讀取第 ' + page + ' 頁');
 
-  var cacheKey = view_story_mode_get_cache_key('page', page);
-
-  var cachedItem = get_cache(cacheKey);
+  var cache = view_story_mode_cache.get(page);
   var cacheIsGood = false;
-  if (cachedItem) {
+  if (cache) {
     debug('hit cache on page ' + page);
 
     cacheIsGood = true;
-    if (cachedItem.textz) {
-      var parsed = view_parse_ajax(Base64.btou(RawDeflate.inflate(cachedItem.textz)));
+    if (cache.textz) {
+      var parsed = view_parse_ajax(Base64.btou(RawDeflate.inflate(cache.textz)));
       if (parsed) {
-        parsed.hasNext = cachedItem.hasNext;
+        parsed.hasNext = cache.hasNext;
         if (!view_story_mode_page_check_content(userId, page, parsed)) {
           // can't locate content but suppose to have, mainly due to page HTML changed but cache old HTML
           cacheIsGood = false;
@@ -1195,7 +1222,7 @@ function view_story_mode_page(userId, page) {
   // get from server again if not cached, or cached but cannot recognize
   if (cacheIsGood) {
     // cachedItem.hasNext should be always true, we won't cache the last page
-    set_cache(view_story_mode_get_cache_key('lastpage'), page);
+    view_story_mode_cache.set('lastpage', page);
     view_story_mode_page(userId, page + 1);
     return;
   }
@@ -1242,9 +1269,9 @@ function view_story_mode_page(userId, page) {
         if (lscache) {
           // we won't cache the last page
           // also won't cache the text content if no thread is added for this page, to save space
-          debug('set cache:' + cacheKey);
-          set_cache(cacheKey, { textz:RawDeflate.deflate(Base64.utob(addedHTML)), hasNext:true });
-          set_cache(view_story_mode_get_cache_key('lastpage'), page);
+          debug('set cache');
+          view_story_mode_cache.set_page(page, { textz:RawDeflate.deflate(Base64.utob(addedHTML)), hasNext:true });
+          view_story_mode_cache.set('lastpage', page);
         }
 
         // sleep for a while, seems will be blocked if too much requests
@@ -1263,21 +1290,34 @@ function view_story_mode_page(userId, page) {
 // return the appended HTML, null/"" if no thread is appended
 function view_story_mode_page_check_content(userId, page, parsed) {
   var parentTable = utils.parent($1('table.repliers'), 'div');
-  if (!parentTable) {
+  if (parentTable === null) {
+    return null;
+  }
+
+  // br
+  //     <-- insert here
+  // div
+  //   div
+  //     ...
+  //       select[name="page"]
+  var insertBeforeNode = utils.parent(utils.arr_last($('select[name="page"]')), function() {
+    return this.tagName && this.tagName.toUpperCase() === 'DIV' && utils.prevSibling(this, 'br') !== null;
+  });
+  insertBeforeNode = insertBeforeNode || $('#newmessage');
+  if (insertBeforeNode === null) {
     return null;
   }
 
   var stories = utils.grep(parsed.threads, function() { return this.userId == userId; });
   debug(stories.length + ' stories found');
-  var cacheCountKey = view_story_mode_get_cache_key('count');
-  set_cache(cacheCountKey, get_cache(cacheCountKey, 0) + stories.length);
+  view_story_mode_cache.set('count', view_story_mode_cache.get().count + stories.length);
 
   var divDest = document.createElement('div');
   utils.each(stories, function(i) {
     if (i === 0) {
       var divPageNum = document.createElement('div');
       divPageNum.innerHTML = '<a href="javascript:changePage(' + page + ')">第 ' + page + ' 頁</a>';
-      parentTable.parentNode.insertBefore(divPageNum, $1('#newmessage'));
+      insertBeforeNode.parentNode.insertBefore(divPageNum, insertBeforeNode);
     }
     divDest.appendChild(this.node);
     g_threads.push(this);
@@ -1292,7 +1332,7 @@ function view_story_mode_page_check_content(userId, page, parsed) {
     });
   }
 
-  parentTable.parentNode.insertBefore(divDest, $1('#newmessage'));
+  insertBeforeNode.parentNode.insertBefore(divDest, insertBeforeNode);
   view_on_new_thread_load();
 
   return addedHTML;
@@ -1384,7 +1424,7 @@ function init() {
   blurdetect = null;
 
   if (lscache) {
-    lscache.setBucket('better-golden');
+    lscache.setBucket('better-golden-');
   }
 
   if (document.location.href.match(/topics\.aspx/) ||

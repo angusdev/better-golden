@@ -152,6 +152,24 @@ org.ellab.utils.grep = function(object, callbackOrMatch) {
   }
 };
 
+org.ellab.utils.arr_first = function(arr) {
+  if (Object.prototype.toString.call(arr) === '[object Array]' && arr.length > 0) {
+    return arr[0];
+  }
+  else {
+    return null;
+  }
+}
+
+org.ellab.utils.arr_last = function(arr) {
+  if (Object.prototype.toString.call(arr) === '[object Array]' && arr.length > 0) {
+    return arr[arr.length - 1];
+  }
+  else {
+    return null;
+  }
+}
+
 // return the first element instead of an array if the selector is simply an id
 org.ellab.utils.sizzleSmart = function(selector, context, results, seed) {
   if (selector.match(/^\s*#[a-zA-Z0-9\-_]+\s*$/)) {
