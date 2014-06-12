@@ -1241,7 +1241,7 @@ function view_story_mode_page(userId, page) {
         // sleep for a while, seems will be blocked if too much requests
         window.setTimeout(function() {
           view_story_mode_page(userId, page + 1);
-        }, AJAX_WAIT);
+        }, AJAX_WAIT + 150 * page);
       }
       else {
         view_notice('睇故模式 ﹣ 完成讀取 ' + page + ' 頁');
