@@ -1106,7 +1106,8 @@ function view_story_mode() {
       div.innerHTML = '<a href="#" data-role="story-mode-view" data-userid="' + userId + '">睇故模式</a>';
       if (cachedStoryLastPage) {
         var divMsg = document.createElement('div');
-        divMsg.innerHTML = 'cache: ' + cachedStoryLastPage + ' 頁';
+        divMsg.innerHTML = 'cache: ' + cachedStoryLastPage + ' 頁 (' +
+                           '<a href="#" data-role="story-mode-clear-cache" data-userid="' + userId + '">清除</a>)';
         meta('story-lastpage', cachedStoryLastPage);
         div.appendChild(divMsg);
       }
@@ -1117,6 +1118,19 @@ function view_story_mode() {
   $e('[data-role="story-mode-view"]', function() {
     this.addEventListener('click', function(e) {
       view_story_mode_click(e.target.getAttribute('data-userid'));
+      e.preventDefault();
+      e.stopPropagation();
+    }, false);
+  });
+
+  $e('[data-role="story-mode-clear-cache"]', function() {
+    this.addEventListener('click', function(e) {
+      for (var i=1 ; i<=41 ; i++) {
+        remove_cache(view_story_mode_get_cache_key('page', e.target.getAttribute('data-userid'), i));
+      }
+      remove_cache(view_story_mode_get_cache_key('count', e.target.getAttribute('data-userid')));
+      remove_cache(view_story_mode_get_cache_key('lastpage', e.target.getAttribute('data-userid')));
+      document.location.reload();
       e.preventDefault();
       e.stopPropagation();
     }, false);
