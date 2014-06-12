@@ -24,7 +24,7 @@ FAVICON[2].NEW_MESSAGE = utils.getResourceURL('new-message', 'images/new-message
 FAVICON[2].NO_MESSAGE = utils.getResourceURL('no-message', 'images/clock.png');
 FAVICON[2].GOLDEN_ICON = utils.getResourceURL('golden-favicon', 'images/golden-favicon-blank.png');
 
-var GOLDEN_TIMEFMT = 'M/D/YYYY H:mm A';
+var GOLDEN_TIMEFMT = 'M/D/YYYY h:mm A';
 var GOLDEN_TIMEFMT_OLD = 'D/M/YYYY HH:mm';
 
 var g_options = {};
@@ -1005,8 +1005,9 @@ function view_expand_youtube() {
         var xml = utils.parseXML(response.responseText);
         if (xml) {
           var timestamp = xml.getElementsByTagName('entry')[0].getElementsByTagName('published')[0].textContent;
+          timestamp = moment(timestamp, 'YYYY-MM-DDTHH:mm:ss.SSSZ').zone(new Date().getTimezoneOffset()).lang('en').format(GOLDEN_TIMEFMT);
           spanTitle.innerHTML = utils.encodeHTML(xml.getElementsByTagName('entry')[0].getElementsByTagName('title')[0].textContent);
-          spanTimestamp.setAttribute('strfmt', moment(timestamp, spanTimestamp.getAttribute('timefmt')).lang('en').format(GOLDEN_TIMEFMT) + ' (%s)');
+          spanTimestamp.setAttribute('strfmt', timestamp + ' (%s)')
           spanTimestamp.setAttribute('fromtime', timestamp);
           view_update_smart_timestamp();
         }
@@ -1043,7 +1044,7 @@ function view_expand_youtube() {
       var spanTimestamp = document.createElement('span');
       spanTimestamp.className = 'ellab-inline-timestamp ellab-timestamp';
       spanTimestamp.setAttribute('ellab-youtube-vid', vid);
-      spanTimestamp.setAttribute('timefmt', 'YYYY-MM-DDTHH:mm:ss.SSSz');
+      //spanTimestamp.setAttribute('timefmt', 'YYYY-MM-DDTHH:mm:ss.SSSZ');
       utils.insertAfter(spanTimestamp, spanTitle);
       // call youtube api to get the data
       p_view_expand_youtube_load_video_data(spanTitle, spanTimestamp, vid);
