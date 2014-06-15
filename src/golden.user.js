@@ -59,6 +59,14 @@ function performance(m, time) {
   }
 }
 
+function kmb(n) {
+   if (n === 0) return '0';
+   var k = 1000;
+   var sizes = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+   var i = Math.floor(Math.log(n) / Math.log(k));
+   return (n / Math.pow(k, i)).toPrecision(3) + ' ' + sizes[i];
+}
+
 function meta(key, value) {
   if (value === undefined) {
     return document.body.getAttribute('ellab-' + key);
@@ -1000,14 +1008,28 @@ function view_expand_youtube() {
   function p_view_expand_youtube_load_video_data(spanTitle, spanTimestamp, vid) {
     utils.crossOriginXMLHttpRequest({
       method: 'get',
-      url: 'https://gdata.youtube.com/feeds/api/videos/' + vid + '?v=2',
+      url: 'https://gdata.youtube.com/feeds/api/videos/' + vid + '?v2=&alt=json',
+      type: 'json',
       onload: function(response) {
-        var xml = utils.parseXML(response.responseText);
-        if (xml) {
-          var timestamp = xml.getElementsByTagName('entry')[0].getElementsByTagName('published')[0].textContent;
+        var data = utils.parseJSON(response.responseText);
+        if (data && data.entry) {
+          var timestamp = data.entry.published.$t;
+          var rating = data.entry.gd$rating?
+            ('r:' + (Math.round(data.entry.gd$rating.average * 10) / 10) + (' (' + data.entry.gd$rating.numRaters + ')'))
+            :null;
+          var duration = (data.entry.media$group && data.entry.media$group.yt$duration && data.entry.media$group.yt$duration.seconds)?
+            ('d:' + moment.duration(parseInt(data.entry.media$group.yt$duration.seconds, 10), 'seconds').humanize(true))
+            :null;
+          var view = data.entry.yt$statistics?('v:' + kmb(data.entry.yt$statistics.viewCount)):null;
+          var likes = data.entry.yt$rating?('+' + data.entry.yt$rating.numLikes):null;
+          var dislikes = data.entry.yt$rating?('-' + data.entry.yt$rating.numDislikes):null;
+          var addinfo =
+            [duration, view, rating, likes, dislikes]
+            .join(',').replace(/\s*,\s*(,\s*)+/g, ',').replace(/^\s*,?/, '').replace(/,?\s*$/, '').replace(/,/g, ', ');
+
           timestamp = moment(timestamp, 'YYYY-MM-DDTHH:mm:ss.SSSZ').zone(new Date().getTimezoneOffset()).lang('en').format(GOLDEN_TIMEFMT);
-          spanTitle.innerHTML = utils.encodeHTML(xml.getElementsByTagName('entry')[0].getElementsByTagName('title')[0].textContent);
-          spanTimestamp.setAttribute('strfmt', timestamp + ' (%s)')
+          spanTitle.innerHTML = utils.encodeHTML(data.entry.title.$t);
+          spanTimestamp.setAttribute('strfmt', timestamp + ' (%s) '  + addinfo)
           spanTimestamp.setAttribute('fromtime', timestamp);
           view_update_smart_timestamp();
         }
