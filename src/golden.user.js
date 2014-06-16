@@ -453,7 +453,7 @@ function menubar(page) {
                   '  <div class="ellab-button" id="ellab-reload-btn"><a href="#" onclick="document.location.reload();return false;"><span>重載</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-blur-btn"><a href="#"><span>亮度</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-blockquote-btn"><a href="#"><span>顯示所有引用</span></a></div>' +
-                  '  <div class="ellab-button" id="ellab-tweet-btn"><a href="#"><span>分享到 Twitter</span></a></div>' +
+                  '  <div class="ellab-button" id="ellab-tweet-btn"><a href="#"><span>分享</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-options-btn"><a href="#"><span>設定</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-close-btn" style="display:none;"><a href="#"><span>關閉</span></a></div>' +
                   '</div>';

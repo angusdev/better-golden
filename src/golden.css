@@ -139,6 +139,7 @@ a.novisited:hover {
 }
 .ellab-button a {
   display: block;
+  font-size: .8em;
   padding-top: 4px;
   min-height: 20px;
   text-decoration: none;
