@@ -1,5 +1,5 @@
 /*jshint white: false, browser: true, onevar:false */
-/*global chrome, console, org, moment, lscache, RawDeflate, Base64 */
+/*global chrome, console, org, moment, lscache, Sizzle, RawDeflate, Base64 */
 (function() {
 'use strict';
 
@@ -1029,7 +1029,7 @@ function view_expand_youtube() {
 
           timestamp = moment(timestamp, 'YYYY-MM-DDTHH:mm:ss.SSSZ').zone(new Date().getTimezoneOffset()).lang('en').format(GOLDEN_TIMEFMT);
           spanTitle.innerHTML = utils.encodeHTML(data.entry.title.$t);
-          spanTimestamp.setAttribute('strfmt', timestamp + ' (%s) '  + addinfo)
+          spanTimestamp.setAttribute('strfmt', timestamp + ' (%s) '  + addinfo);
           spanTimestamp.setAttribute('fromtime', timestamp);
           view_update_smart_timestamp();
         }
@@ -1380,7 +1380,7 @@ function topics() {
   time = performance('topics_open_link_new_window', time);
   topics_disable_sensor();
   time = performance('topics_disable_sensor', time);
-  topics_message_history()
+  topics_message_history();
   time = performance('topics_message_history', time);
   //topics_opened_tabs();
   //time = performance('topics_opened_tabs', time);
