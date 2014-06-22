@@ -1046,12 +1046,12 @@ function view_expand_youtube() {
   // });
 
   xpathl('//a[(contains(@href, "youtube.com/watch?v=") or contains(@href, "youtu.be/")) and not(@ellab-expanded)]').each(function() {
-    var res = this.href.match(/^https?\:\/\/(www\.)?youtube\.com\/watch\?v\=([^\&]+)/);
+    var res = this.href.match(/^https?\:\/\/(www\.)?youtube\.com\/watch\?v\=([a-zA-Z0-9\-_]+)/);
     if (!res) {
-      res = this.href.match(/^https?\:\/\/(m\.)?youtube\.com\/watch\?v\=([^\&]+)/);
+      res = this.href.match(/^https?\:\/\/(m\.)?youtube\.com\/watch\?v\=([a-zA-Z0-9\-_]+)/);
     }
     if (!res) {
-      res = this.href.match(/^https?\:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9]+)/);
+      res = this.href.match(/^https?\:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9\-_]+)/);
     }
     if (res) {
       this.setAttribute('ellab-expanded', true);
