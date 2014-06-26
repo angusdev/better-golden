@@ -266,5 +266,22 @@ a.novisited:hover {
   overflow: hidden;
   padding: 5px 0;
 }
+.ellab-image-thumb {
+  width: 50px;
+  height: auto;
+  transition-property: height, width;
+  -webkit-transition-property: height, width;
+  transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+}
+.ellab-image-thumb:hover {
+  width: 300px;
+  height: auto;
+  transition-property: height, width;
+  -webkit-transition-property: height, width;
+  transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+}
+
 
 

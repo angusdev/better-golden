@@ -32,6 +32,7 @@ var g_is_blur = false;  // is included the blur css
 var g_threads = [];
 var g_lastThreadNode;
 var g_ajaxQueue = [];
+var g_imglist = [];   // store the image in the threads
 
 function error(m) {
   if (console && typeof console.log !== undefined) {
@@ -954,6 +955,64 @@ function view_parse_ajax_title(t) {
   return utils.trim(utils.extract(t, '<Attribute name="title">', '</Attribute>') || utils.extract(t, '<title>', '</title>'));
 }
 
+// make the image bigger
+// also turn repeated image to thumbnail only
+function view_resize_images() {
+  // hkgolden will resize the image to 300px width in onload
+  // as at this script run, the image may still loading so need to setInterval to keep checking
+  window.setInterval(function() {
+    $e('.repliers img[width=300]:not([data-ellab-resizeimg])', function() {
+      var ele = this;
+      // somehow in utils.find callback, 'this' is converted from string literal to String object so need to toString()
+      if (utils.find(g_imglist, function() { return this.toString() == ele.src; })) {
+        this.setAttribute('width', 50);
+        this.removeAttribute('height');
+        this.setAttribute('data-ellab-resizeimg', 'done');
+        utils.addClass(this, 'ellab-image-thumb');
+      }
+      else {
+        g_imglist.push(this.src);
+        view_resize_images_do_resize(this);
+      }
+    });
+  }, 1000);
+}
+
+function view_resize_images_do_resize(ele) {
+  ele.setAttribute('data-ellab-resizeimg', 'loading');
+  var img = new Image;
+  img.onload = function() {
+    img = null;
+
+    ele.setAttribute('data-ellab-resizeimg', 'done');
+    var td = utils.parent(ele, 'td');
+    if (!td) return;
+
+    var height = parseInt(ele.getAttribute('height'), 10);
+    if (!height || isNaN(height)) return;
+
+    var maxWidth = td.clientWidth * 0.9;
+    var left = utils.calcOffsetLeft(ele) - utils.calcOffsetLeft(td);
+    if (left < 0) return;
+
+    var newWidth = Math.max(Math.min(maxWidth - left, this.width), 300);
+    if (newWidth == 300) {
+      // so it won't be revisit again
+      newWidth = 299;
+    }
+    var newHeight = parseInt(height * newWidth / 300, 10);
+    var maxHeight = Math.max(height, (window.innerHeight - $('#ellab-menubar').clientHeight) * 0.9);
+    if (newHeight >= maxHeight) {
+      newWidth = parseInt(newWidth * maxHeight / newHeight, 10);
+      newHeight = maxHeight;
+    }
+
+    ele.setAttribute('width', newWidth);
+    ele.setAttribute('height', newHeight);
+  };
+
+  img.src = ele.src;
+}
 
 // 1. show the title of other golden message
 // 2. open golden meesage link in new tab
@@ -1418,6 +1477,8 @@ function view() {
   time = performance('view_clean_layout', time);
   //view_add_golden_show_link();
   //time = performance('view_add_golden_show_link', time);
+  view_resize_images();
+  time = performance('view_resize_images', time);
   view_golden_message_link();
   time = performance('view_golden_message_link', time);
   view_expand_youtube();
