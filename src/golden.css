@@ -267,21 +267,32 @@ a.novisited:hover {
   padding: 5px 0;
 }
 .ellab-image-thumb {
+  position: absolute;
+  z-index: 999;
+}
+.ellab-image-thumb:hover {
+  z-index: 9999;
+}
+.ellab-image-thumb img {
   width: 50px;
   height: auto;
   transition-property: height, width;
   -webkit-transition-property: height, width;
   transition-duration: 0.5s;
   -webkit-transition-duration: 0.5s;
+  z-index: 999;
 }
-.ellab-image-thumb:hover {
+.ellab-image-thumb img:hover {
   width: 300px;
   height: auto;
   transition-property: height, width;
   -webkit-transition-property: height, width;
   transition-duration: 0.5s;
   -webkit-transition-duration: 0.5s;
+  z-index: 9999;
 }
 
-
+blockquote {
+  opacity: 1 !important;
+}
 

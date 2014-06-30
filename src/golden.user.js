@@ -966,9 +966,22 @@ function view_resize_images() {
       // somehow in utils.find callback, 'this' is converted from string literal to String object so need to toString()
       if (utils.find(g_imglist, function() { return this.toString() == ele.src; })) {
         this.setAttribute('width', 50);
+        var height = parseInt(this.getAttribute('height'), 10);
         this.removeAttribute('height');
         this.setAttribute('data-ellab-resizeimg', 'done');
-        utils.addClass(this, 'ellab-image-thumb');
+        if (height && !isNaN(height)) {
+          var parentA = utils.parent(this, 'a', true);
+          if (parentA) {
+            utils.addClass(parentA, 'ellab-image-thumb');
+            var left = utils.calcOffsetLeft(parentA);
+            var top = utils.calcOffsetTop(parentA);
+            height = parseInt(height / 6, 10);
+            var div = document.createElement('div');
+            div.setAttribute('style', 'width:50px;height:' + height + 'px;background:red;');
+            parentA.parentNode.insertBefore(div, parentA);
+            div.appendChild(parentA);
+          }
+        }
       }
       else {
         g_imglist.push(this.src);
@@ -996,19 +1009,18 @@ function view_resize_images_do_resize(ele) {
     if (left < 0) return;
 
     var newWidth = Math.max(Math.min(maxWidth - left, this.width), 300);
-    if (newWidth == 300) {
-      // so it won't be revisit again
-      newWidth = 299;
-    }
-    var newHeight = parseInt(height * newWidth / 300, 10);
-    var maxHeight = Math.max(height, (window.innerHeight - $('#ellab-menubar').clientHeight) * 0.9);
-    if (newHeight >= maxHeight) {
-      newWidth = parseInt(newWidth * maxHeight / newHeight, 10);
-      newHeight = maxHeight;
-    }
+    if (newWidth > 350) {
+      // no need to resize again if diff is not much
+      var newHeight = parseInt(height * newWidth / 300, 10);
+      var maxHeight = Math.max(height, (window.innerHeight - $('#ellab-menubar').clientHeight) * 0.9);
+      if (newHeight >= maxHeight) {
+        newWidth = parseInt(newWidth * maxHeight / newHeight, 10);
+        newHeight = maxHeight;
+      }
 
-    ele.setAttribute('width', newWidth);
-    ele.setAttribute('height', newHeight);
+      ele.setAttribute('width', newWidth);
+      ele.setAttribute('height', newHeight);
+    }
   };
 
   img.src = ele.src;
