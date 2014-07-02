@@ -268,6 +268,10 @@ a.novisited:hover {
 }
 .ellab-image-thumb {
   position: absolute;
+  transition-property: z-index;
+  -webkit-transition-property: z-index;
+  transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
   z-index: 999;
 }
 .ellab-image-thumb:hover {
@@ -280,7 +284,6 @@ a.novisited:hover {
   -webkit-transition-property: height, width;
   transition-duration: 0.5s;
   -webkit-transition-duration: 0.5s;
-  z-index: 999;
 }
 .ellab-image-thumb img:hover {
   width: 300px;
@@ -289,7 +292,6 @@ a.novisited:hover {
   -webkit-transition-property: height, width;
   transition-duration: 0.5s;
   -webkit-transition-duration: 0.5s;
-  z-index: 9999;
 }
 
 blockquote {
