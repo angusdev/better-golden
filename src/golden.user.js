@@ -33,6 +33,7 @@ var g_threads = [];
 var g_lastThreadNode;
 var g_ajaxQueue = [];
 var g_imglist = [];   // store the image in the threads
+var g_youtubelist = []; // store the video id in the threads
 
 function error(m) {
   if (console && typeof console.log !== undefined) {
@@ -1147,9 +1148,9 @@ function view_expand_youtube() {
       div.className = 'ellab-youtube';
 
       div.addEventListener('click', function(e) {
-        if (e.target.tagName.toLowerCase() === 'img') {
+        if (e.target.tagName && e.target.tagName.toLowerCase() === 'img') {
           // only effective when click the thumbnail
-          if ((option_equal('youtube', 0) || option_equal('youtube', 1)) && this.innerHTML.indexOf('iframe') < 0) {
+          if (e.target.src.indexOf('http://img.youtube.com/vi/') >= 0 && this.innerHTML.indexOf('iframe') < 0) {
             this.innerHTML = '<iframe width="560" height="315" src="http://www.youtube.com/embed/' + this.getAttribute('ellab-youtube-vid') + '" frameborder="0" allowfullscreen></iframe>';
           }
         }
@@ -1164,12 +1165,22 @@ function view_expand_youtube() {
 
 function view_expand_youtube_enabler() {
   $e('div[ellab-youtube-vid]', function() {
-    if (option_equal('youtube', 0) || option_equal('youtube', 1)) {
-      this.innerHTML = '<img src="http://img.youtube.com/vi/' + this.getAttribute('ellab-youtube-vid') + '/' + g_options.youtube + '.jpg"/>';
+    var youtubeOption = option_equal('youtube', 0)?0:(option_equal('youtube', 1)?1:g_options.youtube);
+    var vid = this.getAttribute('ellab-youtube-vid');
+    var style = '';
+    if (utils.find(g_youtubelist, function() { return this.toString() == vid; })) {
+      // force to use thumbnail even the setting is show video
+      youtubeOption = option_equal('youtube', 1)?1:0;
+      style = ' style="width:50px;"';
+    }
+    g_youtubelist.push(vid);
+
+    if (youtubeOption === 0 || youtubeOption === 1) {
+      this.innerHTML = '<img src="http://img.youtube.com/vi/' + vid + '/' + youtubeOption + '.jpg"' + style + ' />';
       this.style.display = '';
     }
-    else if (g_options.youtube == 'video') {
-      this.innerHTML = '<iframe width="560" height="315" src="http://www.youtube.com/embed/' + this.getAttribute('ellab-youtube-vid') + '" frameborder="0" allowfullscreen></iframe>';
+    else if (youtubeOption === 'video') {
+      this.innerHTML = '<iframe width="560" height="315" src="http://www.youtube.com/embed/' + vid + '" frameborder="0" allowfullscreen></iframe>';
       this.style.display = '';
     }
     else {
