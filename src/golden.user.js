@@ -88,6 +88,10 @@ function meta_int(key, defaultValue) {
   return i;
 }
 
+function get_forum_domain(server) {
+  return (server === 'search'?'search':('forum' + server)) + '.hkgolden.com';
+}
+
 // for some unknown reason the g_options[key] may be string or object, e.g. true vs 'true'
 // so force to do string comparison
 function option_equal(key, value) {
@@ -1069,8 +1073,8 @@ function view_golden_message_link() {
       }
       if (parsed.forum != meta('server')) {
         // change to current server
-        this.href = this.href.replace(/^http\:\/\/forum\d+\.hkgolden\.com\//, 'http://forum' + meta('server') + '.hkgolden.com/');
-        this.innerHTML = this.innerHTML.replace(/http\:\/\/forum\d+\.hkgolden\.com\//, 'http://forum' + meta('server') + '.hkgolden.com/');
+        this.href = this.href.replace(/^http\:\/\/forum\d+\.hkgolden\.com\//, 'http://' + get_forum_domain(meta('server')) + '/');
+        this.innerHTML = this.innerHTML.replace(/http\:\/\/forum\d+\.hkgolden\.com\//, 'http://' + get_forum_domain(meta('server')) + '/');
       }
     }
   });
