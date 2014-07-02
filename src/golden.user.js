@@ -667,7 +667,7 @@ function view_remove_ad_empty_row() {
 function view_clean_content() {
   // remove show_ads.js
   $e('table.repliers', function() {
-    $e('script[src*="show_ads.js"], iframe[src*="yahoo_ad.aspx"]', function() {
+    $e('script[src*="show_ads.js"], iframe[src*="yahoo_ad"]', function() {
       utils.removeChild(utils.parent(this, 'table'));
     }, null, this);
   });
