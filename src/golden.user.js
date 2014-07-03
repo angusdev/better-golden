@@ -25,6 +25,7 @@ FAVICON[2].NO_MESSAGE = utils.getResourceURL('no-message', 'images/clock.png');
 FAVICON[2].GOLDEN_ICON = utils.getResourceURL('golden-favicon', 'images/golden-favicon-blank.png');
 
 var GOLDEN_TIMEFMT = 'M/D/YYYY h:mm A';
+var GOLDEN_TIMEFMT_2 = 'D/M/YYYY h:mm A';
 var GOLDEN_TIMEFMT_OLD = 'D/M/YYYY HH:mm';
 
 var g_options = {};
@@ -188,11 +189,11 @@ function parse_view_url(url) {
 
 function guess_time_format(time) {
   if (typeof(time) !== 'string') {
-    return GOLDEN_TIMEFMT;
+    return meta('server') == '8'?GOLDEN_TIMEFMT_2:GOLDEN_TIMEFMT;
   }
 
   if (time.match(/\d\d?\/\d\d?\/\d{4} \d\d?\:\d\d( [A|P]M)?/)) {
-    return GOLDEN_TIMEFMT;
+    return meta('server') == '8'?GOLDEN_TIMEFMT_2:GOLDEN_TIMEFMT;
   }
   else {
     return GOLDEN_TIMEFMT_OLD;
