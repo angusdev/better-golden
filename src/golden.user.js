@@ -32,6 +32,8 @@ var g_is_blur = false;  // is included the blur css
 var g_threads = [];
 var g_lastThreadNode;
 var g_ajaxQueue = [];
+var g_imglist = [];   // store the image in the threads
+var g_youtubelist = []; // store the video id in the threads
 
 function error(m) {
   if (console && typeof console.log !== undefined) {
@@ -84,6 +86,10 @@ function meta_int(key, defaultValue) {
   }
 
   return i;
+}
+
+function get_forum_domain(server) {
+  return (server === 'search'?'search':('forum' + server)) + '.hkgolden.com';
 }
 
 // for some unknown reason the g_options[key] may be string or object, e.g. true vs 'true'
@@ -954,6 +960,76 @@ function view_parse_ajax_title(t) {
   return utils.trim(utils.extract(t, '<Attribute name="title">', '</Attribute>') || utils.extract(t, '<title>', '</title>'));
 }
 
+// make the image bigger
+// also turn repeated image to thumbnail only
+function view_resize_images() {
+  // hkgolden will resize the image to 300px width in onload
+  // as at this script run, the image may still loading so need to setInterval to keep checking
+  window.setInterval(function() {
+    $e('.repliers img[width=300]:not([data-ellab-resizeimg])', function() {
+      var ele = this;
+      // somehow in utils.find callback, 'this' is converted from string literal to String object so need to toString()
+      if (utils.find(g_imglist, function() { return this.toString() == ele.src; })) {
+        this.setAttribute('width', 50);
+        var height = parseInt(this.getAttribute('height'), 10);
+        this.removeAttribute('height');
+        this.setAttribute('data-ellab-resizeimg', 'done');
+        if (height && !isNaN(height)) {
+          var parentA = utils.parent(this, 'a', true);
+          if (parentA) {
+            utils.addClass(parentA, 'ellab-image-thumb');
+            var left = utils.calcOffsetLeft(parentA);
+            var top = utils.calcOffsetTop(parentA);
+            height = parseInt(height / 6, 10);
+            var div = document.createElement('div');
+            div.setAttribute('style', 'width:50px;height:' + height + 'px;background:red;');
+            parentA.parentNode.insertBefore(div, parentA);
+            div.appendChild(parentA);
+          }
+        }
+      }
+      else {
+        g_imglist.push(this.src);
+        view_resize_images_do_resize(this);
+      }
+    });
+  }, 1000);
+}
+
+function view_resize_images_do_resize(ele) {
+  ele.setAttribute('data-ellab-resizeimg', 'loading');
+  var img = new Image;
+  img.onload = function() {
+    img = null;
+
+    ele.setAttribute('data-ellab-resizeimg', 'done');
+    var td = utils.parent(ele, 'td');
+    if (!td) return;
+
+    var height = parseInt(ele.getAttribute('height'), 10);
+    if (!height || isNaN(height)) return;
+
+    var maxWidth = td.clientWidth * 0.9;
+    var left = utils.calcOffsetLeft(ele) - utils.calcOffsetLeft(td);
+    if (left < 0) return;
+
+    var newWidth = Math.max(Math.min(maxWidth - left, this.width), 300);
+    if (newWidth > 350) {
+      // no need to resize again if diff is not much
+      var newHeight = parseInt(height * newWidth / 300, 10);
+      var maxHeight = Math.max(height, (window.innerHeight - $('#ellab-menubar').clientHeight) * 0.9);
+      if (newHeight >= maxHeight) {
+        newWidth = parseInt(newWidth * maxHeight / newHeight, 10);
+        newHeight = maxHeight;
+      }
+
+      ele.setAttribute('width', newWidth);
+      ele.setAttribute('height', newHeight);
+    }
+  };
+
+  img.src = ele.src;
+}
 
 // 1. show the title of other golden message
 // 2. open golden meesage link in new tab
@@ -997,8 +1073,8 @@ function view_golden_message_link() {
       }
       if (parsed.forum != meta('server')) {
         // change to current server
-        this.href = this.href.replace(/^http\:\/\/forum\d+\.hkgolden\.com\//, 'http://forum' + meta('server') + '.hkgolden.com/');
-        this.innerHTML = this.innerHTML.replace(/http\:\/\/forum\d+\.hkgolden\.com\//, 'http://forum' + meta('server') + '.hkgolden.com/');
+        this.href = this.href.replace(/^http\:\/\/forum\d+\.hkgolden\.com\//, 'http://' + get_forum_domain(meta('server')) + '/');
+        this.innerHTML = this.innerHTML.replace(/http\:\/\/forum\d+\.hkgolden\.com\//, 'http://' + get_forum_domain(meta('server')) + '/');
       }
     }
   });
@@ -1076,9 +1152,9 @@ function view_expand_youtube() {
       div.className = 'ellab-youtube';
 
       div.addEventListener('click', function(e) {
-        if (e.target.tagName.toLowerCase() === 'img') {
+        if (e.target.tagName && e.target.tagName.toLowerCase() === 'img') {
           // only effective when click the thumbnail
-          if ((option_equal('youtube', 0) || option_equal('youtube', 1)) && this.innerHTML.indexOf('iframe') < 0) {
+          if (e.target.src.indexOf('http://img.youtube.com/vi/') >= 0 && this.innerHTML.indexOf('iframe') < 0) {
             this.innerHTML = '<iframe width="560" height="315" src="http://www.youtube.com/embed/' + this.getAttribute('ellab-youtube-vid') + '" frameborder="0" allowfullscreen></iframe>';
           }
         }
@@ -1093,12 +1169,22 @@ function view_expand_youtube() {
 
 function view_expand_youtube_enabler() {
   $e('div[ellab-youtube-vid]', function() {
-    if (option_equal('youtube', 0) || option_equal('youtube', 1)) {
-      this.innerHTML = '<img src="http://img.youtube.com/vi/' + this.getAttribute('ellab-youtube-vid') + '/' + g_options.youtube + '.jpg"/>';
+    var youtubeOption = option_equal('youtube', 0)?0:(option_equal('youtube', 1)?1:g_options.youtube);
+    var vid = this.getAttribute('ellab-youtube-vid');
+    var style = '';
+    if (utils.find(g_youtubelist, function() { return this.toString() == vid; })) {
+      // force to use thumbnail even the setting is show video
+      youtubeOption = option_equal('youtube', 1)?1:0;
+      style = ' style="width:50px;"';
+    }
+    g_youtubelist.push(vid);
+
+    if (youtubeOption === 0 || youtubeOption === 1) {
+      this.innerHTML = '<img src="http://img.youtube.com/vi/' + vid + '/' + youtubeOption + '.jpg"' + style + ' />';
       this.style.display = '';
     }
-    else if (g_options.youtube == 'video') {
-      this.innerHTML = '<iframe width="560" height="315" src="http://www.youtube.com/embed/' + this.getAttribute('ellab-youtube-vid') + '" frameborder="0" allowfullscreen></iframe>';
+    else if (youtubeOption === 'video') {
+      this.innerHTML = '<iframe width="560" height="315" src="http://www.youtube.com/embed/' + vid + '" frameborder="0" allowfullscreen></iframe>';
       this.style.display = '';
     }
     else {
@@ -1418,6 +1504,8 @@ function view() {
   time = performance('view_clean_layout', time);
   //view_add_golden_show_link();
   //time = performance('view_add_golden_show_link', time);
+  view_resize_images();
+  time = performance('view_resize_images', time);
   view_golden_message_link();
   time = performance('view_golden_message_link', time);
   view_expand_youtube();

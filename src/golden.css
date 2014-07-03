@@ -102,7 +102,7 @@ a.novisited:hover {
   float:right; margin-right:100px;
 }
 #ellab-menubar {
-  background: -webkit-gradient(linear, 0% 40%, 0% 100%, from(#f0f0dd), to(#fff));
+  background: -webkit-linear-gradient(top, rgba(235,223,199,1) 0%, rgba(251, 249, 244, 1) 70%, rgba(255,255,255,0) 100%);
   position:fixed;
   top:0;
   width:100%;
@@ -266,5 +266,35 @@ a.novisited:hover {
   overflow: hidden;
   padding: 5px 0;
 }
+.ellab-image-thumb {
+  position: absolute;
+  transition-property: z-index;
+  -webkit-transition-property: z-index;
+  transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+  z-index: 999;
+}
+.ellab-image-thumb:hover {
+  z-index: 9999;
+}
+.ellab-image-thumb img {
+  width: 50px;
+  height: auto;
+  transition-property: height, width;
+  -webkit-transition-property: height, width;
+  transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+}
+.ellab-image-thumb img:hover {
+  width: 300px;
+  height: auto;
+  transition-property: height, width;
+  -webkit-transition-property: height, width;
+  transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+}
 
+blockquote {
+  opacity: 1 !important;
+}
 
