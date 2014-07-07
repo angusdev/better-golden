@@ -207,10 +207,21 @@ function change_favicon(key) {
   }
 }
 
+function check_and_fix_option_value(key, value) {
+  if (key === 'imagewidth') {
+    value = parseInt(value, 10);
+    if (isNaN(value) || value  < 0 || value > 100) {
+      value = 100;
+    }
+  }
+
+  return value;
+}
+
 function on_options_changed(obj) {
   var key;
   for (key in obj) {
-    g_options[key] = obj[key].newValue;
+    g_options[key] = check_and_fix_option_value(key, obj[key].newValue);
     on_options_value_changed(key);
   }
 }
@@ -457,8 +468,9 @@ function menubar(page) {
                   '<div style="float:right;margin-right:20px;">' +
                   '  <div class="ellab-button" id="ellab-markread-btn"><a href="#"><span>已讀</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-goldenshow-btn" style="display:none;"><a href="' + meta('golden-show-url') + '" target="_blank"><span>GoldenShow</span></a></div>' +
-                  '  <div class="ellab-button" id="ellab-reload-btn"><a href="#" onclick="document.location.reload();return false;"><span>重載</span></a></div>' +
+                  '  <div class="ellab-button" id="ellab-reload-btn"><a href="#"><span>重載</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-blur-btn"><a href="#"><span>亮度</span></a></div>' +
+                  '  <div class="ellab-button" id="ellab-imagesize-btn"><a href="#"><span>圖片</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-blockquote-btn"><a href="#"><span>顯示所有引用</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-tweet-btn"><a href="#"><span>分享</span></a></div>' +
                   '  <div class="ellab-button" id="ellab-options-btn"><a href="#"><span>設定</span></a></div>' +
@@ -470,6 +482,7 @@ function menubar(page) {
 
   if (page == 'topics') {
     $('#ellab-markread-btn').style.display = 'none';
+    $('#ellab-imagesize-btn').style.display = 'none';
     $('#ellab-tweet-btn').style.display = 'none';
     if (!g_is_blur) {
       // if g_is_blur == false, there is only options button and reload btn, better to hide it
@@ -483,6 +496,14 @@ function menubar(page) {
   $('#ellab-menubar-title').innerHTML = utils.encodeHTML(meta('title'));
   $('#ellab-menubar-title').setAttribute('title', utils.encodeHTML(meta('title')));
 
+  // reload button
+  $('#ellab-reload-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    document.location.reload();
+  }, false);
+
+  // mark as read button
   function p_mark_as_read_helper() {
     xpathl('//*[contains(concat(" ", @class, " "), " ellab-new-reply ")]').each(function() {
       this.className = this.className.replace('ellab-new-reply', '');
@@ -493,7 +514,6 @@ function menubar(page) {
     change_favicon('GOLDEN_ICON');
   }
 
-  // mark as read button
   utils.detectScroll(function(pos) {
     if (option_equal('scrollmarkread', true)) {
       if (pos === 'bottom') {
@@ -503,9 +523,9 @@ function menubar(page) {
   });
 
   $('#ellab-markread-btn').addEventListener('click', function(e) {
-    p_mark_as_read_helper();
     e.stopPropagation();
     e.preventDefault();
+    p_mark_as_read_helper();
   }, false);
 
   // blur button
@@ -514,6 +534,50 @@ function menubar(page) {
     e.stopPropagation();
     e.preventDefault();
   });
+
+  // image size button
+  $('#ellab-imagesize-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    var div = $('#ellab-image-resize-menu');
+    if (div) {
+      if (div.style.display) {
+        div.style.display = '';
+      }
+      else {
+        div.style.display = 'none';
+      }
+    }
+    else {
+      div = document.createElement('div');
+      div.setAttribute('id', 'ellab-image-resize-menu');
+      div.className = 'ellab-image-resize-menu';
+      div.style.left = utils.calcOffsetLeft($('#ellab-imagesize-btn')) + 'px';
+      div.style.top = utils.calcOffsetTop($('#ellab-imagesize-btn')) + ($('#ellab-imagesize-btn').clientHeight + 2) + 'px';
+      div.style.width = ($('#ellab-imagesize-btn').clientWidth + 2) + 'px';
+      div.innerHTML = '<input type="range" class="ellab-image-size-slider" min="0" max="100" step="1" value="' + (100 - g_options.imagewidth) + '" />' +
+                      '<div class="ellab-image-size-label">' + (g_options.imagewidth > 0? (g_options.imagewidth + '%'):'停用') + '</div>';
+      document.body.appendChild(div);
+
+      $1('.ellab-image-size-slider', div).addEventListener('input', function(e) {
+        var pct = 100 - e.target.value;
+        chrome.extension.sendMessage({msgId: 'set_options', newOptions:{ 'imagewidth':pct }});
+        $1('#ellab-image-resize-menu .ellab-image-size-label').innerHTML = pct > 0?(pct + '%'):'停用';
+
+        $e('img[data-ellab-resizeimg=done]', function() {
+          var width = parseInt(this.getAttribute('data-ellab-maxwidth'), 10);
+          //var height = parseInt(this.getAttribute('data-ellab-maxheight'), 10);
+          if (!isNaN(width) /*&& !isNaN(height)*/) {
+            this.setAttribute('width', 300 + (width - 300) * pct / 100);
+          }
+        });
+      });
+      $1('.ellab-image-size-slider', div).addEventListener('change', function(e) {
+        $('#ellab-image-resize-menu').style.display = 'none';
+      });
+    }
+  }, false);
 
   // blockquote button
   $('#ellab-blockquote-btn').addEventListener('click', function(e) {
@@ -983,7 +1047,7 @@ function view_resize_images() {
             var top = utils.calcOffsetTop(parentA);
             height = parseInt(height / 6, 10);
             var div = document.createElement('div');
-            div.setAttribute('style', 'width:50px;height:' + height + 'px;background:red;');
+            div.setAttribute('style', 'width:50px;height:' + height + 'px;');
             parentA.parentNode.insertBefore(div, parentA);
             div.appendChild(parentA);
           }
@@ -999,7 +1063,7 @@ function view_resize_images() {
 
 function view_resize_images_do_resize(ele) {
   ele.setAttribute('data-ellab-resizeimg', 'loading');
-  var img = new Image;
+  var img = new Image();
   img.onload = function() {
     img = null;
 
@@ -1010,22 +1074,29 @@ function view_resize_images_do_resize(ele) {
     var height = parseInt(ele.getAttribute('height'), 10);
     if (!height || isNaN(height)) return;
 
-    var maxWidth = td.clientWidth * 0.9;
+    var maxWidth = td.clientWidth;
     var left = utils.calcOffsetLeft(ele) - utils.calcOffsetLeft(td);
     if (left < 0) return;
 
     var newWidth = Math.max(Math.min(maxWidth - left, this.width), 300);
+    // no need to resize again if diff is not much
     if (newWidth > 350) {
-      // no need to resize again if diff is not much
+      // also consider the max height
       var newHeight = parseInt(height * newWidth / 300, 10);
-      var maxHeight = Math.max(height, (window.innerHeight - $('#ellab-menubar').clientHeight) * 0.9);
+      var maxHeight = Math.max(height, (window.innerHeight - $('#ellab-menubar').clientHeight) * 0.95);
       if (newHeight >= maxHeight) {
         newWidth = parseInt(newWidth * maxHeight / newHeight, 10);
         newHeight = maxHeight;
       }
 
+      maxWidth = newWidth;
+      if (g_options.imagewidth >= 0) {
+        newWidth = 300 + ((newWidth - 300) * g_options.imagewidth / 100);
+      }
+
       ele.setAttribute('width', newWidth);
-      ele.setAttribute('height', newHeight);
+      ele.removeAttribute('height');
+      ele.setAttribute('data-ellab-maxwidth', maxWidth);
     }
   };
 
@@ -1564,7 +1635,9 @@ if (document.location.href.match(/topics\.aspx/) ||
     document.location.href.match(/view\.aspx/))
 {
   chrome.extension.sendMessage({msgId: 'get_options'}, function(response) {
-    g_options = response.options;
+    for (var key in response.options) {
+      g_options[key] = check_and_fix_option_value(key, response.options[key]);
+    }
     init();
   });
 }
