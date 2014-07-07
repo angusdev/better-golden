@@ -58,6 +58,16 @@ org.ellab.utils.HoverIntent = function(ele, params) {
       }
     }
 
+    window.addEventListener('mousemove', function(e) {
+      if (instance.status >= 20) {
+        return;
+      }
+      if (instance.status >= 10 && instance.p.cancel) {
+        instance.p.cancel.call(ele);
+      }
+      instance.status = 0;
+    }, false);
+
     ele.addEventListener('mousemove', function(e) {
       if (!instance.inFocus) {
         return;
@@ -105,12 +115,13 @@ org.ellab.utils.HoverIntent = function(ele, params) {
         var diff = new Date().getTime() - instance.lastMouseStay;
         if (diff - instance.p.steadyTime >= instance.p.actionTime) {
           instance.status = 20;
-          if (instance.intervalID) {
-            window.clearInterval(instance.intervalID);
-          }
+          //if (instance.intervalID) {
+          //  window.clearInterval(instance.intervalID);
+          //}
           if (instance.p.done) {
             instance.p.done.call(ele, {x: instance.lastx, y: instance.lasty});
           }
+          instance.reset();
         }
         else if (diff >= instance.p.steadyTime) {
           diff = diff - instance.p.steadyTime;
@@ -153,6 +164,7 @@ org.ellab.utils.ProgressHoverIntent = function(ele, params) {
 
   this._constructor = function(ele, params) {
     var instance = this;
+    this.parent = null;
 
     params = params || {};
     this.savedIn = params.in;
@@ -256,7 +268,7 @@ org.ellab.utils.ProgressHoverIntent = function(ele, params) {
       }
     };
 
-    new org.ellab.utils.HoverIntent(ele, params);
+    this.parent = new org.ellab.utils.HoverIntent(ele, params);
   }
 
   this._constructor(ele, params);
