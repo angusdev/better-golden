@@ -1276,6 +1276,10 @@ function view_favicon() {
 }
 
 function view_story_mode() {
+  // A trick here, the normal url is authorOnly=true, but =True also work, so we use this as
+  // indicator to auto load all pages
+  var story_mode = document.location.href.indexOf('authorOnly=True') > 0;
+
   var cache = view_story_mode_cache.get();
   var userId = cache.userId;
   if (!userId) {
@@ -1285,10 +1289,13 @@ function view_story_mode() {
   }
 
   if (userId) {
-    utils.each(utils.grep(g_threads, function() { return this.userId === userId; }), function() {
+    utils.each(utils.grep(g_threads, function() { return this.userId === userId; }), function(i) {
+      if (story_mode && i > 0) {
+        return false;
+      }
       var div = document.createElement('div');
       div.className = 'ellab-story-mode-btn';
-      div.innerHTML = '<a href="#" data-role="story-mode-view" data-userid="' + userId + '">睇故模式</a>';
+      div.innerHTML = '<a href="#" data-role="story-mode-view" data-userid="' + userId + '">只看樓主</a>';
       if (cache.lastpage) {
         var divMsg = document.createElement('div');
         divMsg.innerHTML = 'cache: ' + cache.lastpage + ' 頁 (' +
@@ -1302,9 +1309,11 @@ function view_story_mode() {
 
   $e('[data-role="story-mode-view"]', function() {
     this.addEventListener('click', function(e) {
-      view_story_mode_click(e.target.getAttribute('data-userid'));
       e.preventDefault();
       e.stopPropagation();
+      document.location.assign(document.location.protocol + '//' + document.location.host + '/' +
+                               document.location.pathname + '?message=' + meta('msg-id') +
+                               '&page=' + meta('curr-page') + '&authorOnly=True');
     }, false);
   });
 
@@ -1316,6 +1325,10 @@ function view_story_mode() {
       e.stopPropagation();
     }, false);
   });
+
+  if (story_mode) {
+    view_story_mode_click(userId);
+  }
 }
 
 var view_story_mode_cache = {
@@ -1376,7 +1389,7 @@ function view_story_mode_click(userId) {
 }
 
 function view_story_mode_page(userId, page) {
-  view_notice('睇故模式 ﹣ 正在讀取第 ' + page + ' 頁');
+  view_notice('只看樓主模式 ﹣ 正在讀取第 ' + page + ' 頁');
 
   var cache = view_story_mode_cache.get(page);
   var cacheIsGood = false;
@@ -1461,7 +1474,7 @@ function view_story_mode_page(userId, page) {
         }, AJAX_WAIT + 150 * page);
       }
       else {
-        view_notice('睇故模式 ﹣ 完成讀取 ' + page + ' 頁');
+        view_notice('只看樓主模式 ﹣ 完成讀取 ' + page + ' 頁');
         meta('story-lastpage', page);
       }
     }

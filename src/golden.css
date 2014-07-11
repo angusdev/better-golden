@@ -90,6 +90,12 @@ td > div > blockquote > div > blockquote > div > blockquote > div > blockquote:b
 td > div > blockquote > div > blockquote > div > blockquote > div > blockquote.quote-expanded:before { content:""; }
 td > div > blockquote > div > blockquote > div > blockquote > div > blockquote > div > blockquote { display:none; }
 
+/* highlight the AuthorOnly icon */
+.repliers_header img[src*="OnlyThisPerson.png"], .repliers_header img[src*="AllPerson.png"] {
+  padding: 2px;
+  background-color: #89b0cd;
+}
+
 /* user script specified */
 a.novisited {
   color: blue;
