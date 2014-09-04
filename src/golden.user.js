@@ -189,11 +189,11 @@ function parse_view_url(url) {
 
 function guess_time_format(time) {
   if (typeof(time) !== 'string') {
-    return meta('server') == '8'?GOLDEN_TIMEFMT_2:GOLDEN_TIMEFMT;
+    return GOLDEN_TIMEFMT_2;
   }
 
   if (time.match(/\d\d?\/\d\d?\/\d{4} \d\d?\:\d\d( [A|P]M)?/)) {
-    return meta('server') == '8'?GOLDEN_TIMEFMT_2:GOLDEN_TIMEFMT;
+    return GOLDEN_TIMEFMT_2;
   }
   else {
     return GOLDEN_TIMEFMT_OLD;
