@@ -38,28 +38,25 @@ body { background-image:none !important; }
 #aspnetForm[action^="view.aspx"] .PageMiddleFunctions { display:none; } /* top change lang and share bar */
 #aspnetForm[action^="view.aspx"] .PageMiddleBox { background:none !important; }
 #aspnetForm[action^="view.aspx"] .FooterPanel { display:none; }
+#aspnetForm[action^="view.aspx"] .FooterPanel + div { display:none; } /* yellow line */
+#aspnetForm[action^="view.aspx"] .FooterPanel + div + div { display:none; } /* last visiting etc */
 
 /* various elements in content page */
+#ctl00_ContentPlaceHolder1_view_form > table > tbody > tr > td:nth-child(2) { display:none; } /* ad on top right */
+#ctl00_ContentPlaceHolder1_view_form [id^="Top Textlink Zone"] { display:none; } /* ad on top right */
+#ctl00_ContentPlaceHolder1_view_form > br { display: none; }
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(1) { display:none; }
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) #MainPageAd2 { display:none; } /* ad */
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) #ctl00_ContentPlaceHolder1_lb_UserName { display:none; } /* username */
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) .DivResizableBoxContainer { display:none; } /* golden internal ad */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(3) { display:none; }
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(4) { display:none; }
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(5) { clear:both; } /* board name */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(6) { display:none; } /* new/reply button */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(7) { display:none; } /* MiddlePageAd1 */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(8) { margin-top:5px !important; border-color:gray !important; } /* top change page box */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(8) > div { padding:2px !important; background:none !important; } /* top change page box */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(8) > div:nth-child(1) { display:none; }
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) > div.DivResizableBoxContainer { display:none; } /* another ad */
-
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) > div > div { padding:2px !important; } /* bottom change page box */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) > div > div:nth-child(1) { display:none; }
-
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(10) { display:none; }
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(11) { } /* new/reply button */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(12) { display:none; } /* board name */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(3) { display:none; } /* top board name */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(4) { display:none; } /* top new/reply button */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(5) > div:first-child { display:none; } /* top change page - blue bar */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(5) > div + div { padding:5px !important; } /* top change page */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(7) > div:first-child { display:none; } /* bottom change page - blue bar */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(7) > div + div { padding:5px !important; } /* bottom change page */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(9) { } /* new/reply button */
+#ctl00_ContentPlaceHolder1_view_form > div:nth-child(10) { } /* bottom board name */
 
 /* hide reply box, only show on mouse over */
 /*
