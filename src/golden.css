@@ -2,35 +2,41 @@ body { background-image:none !important; }
 
 .myTestAd {height: 1px;}
 
-#aspnetForm[action^="topics.aspx"] > table { display:none; }  /* top menu */
+#aspnetForm[action^="topics.aspx"] .ContentPanel > br { display: none; }
+#aspnetForm[action^="topics.aspx"] [id^="Right Textlink Zone"] ~ a { display:none; } /* ad under search */
+#aspnetForm[action^="topics.aspx"] > table { display:none; } /* top menu */
 #aspnetForm[action^="topics.aspx"] > div { margin-top:15px; } /* extra space for the new menubar */
-#aspnetForm[action^="topics.aspx"] #PageMiddlePanel > div > div > div:nth-child(2) > table { display:none; } /* promotion box */
 #aspnetForm[action^="topics.aspx"] .PageMiddleFunctions { display:none; } /* top change lang and share bar */
-#aspnetForm[action^="topics.aspx"] .ContentPanel > table { display:none; }
+#aspnetForm[action^="topics.aspx"] .ContentPanel > table:first-of-type { display:none; }
 #aspnetForm[action^="topics.aspx"] .Topic_ListPanel > div > div { background:none !important; }
 #aspnetForm[action^="topics.aspx"] .Topic_ListPanel > div > div > table:first-child { background-color:gray !important; }
 #aspnetForm[action^="topics.aspx"] .PageMiddleBox { background:none !important;}
-#aspnetForm[action^="topics.aspx"] #MiddlePageAd1 { display:none; }
+#aspnetForm[action^="topics.aspx"] .ContentPanel > table:nth-child(12) > tbody > tr > td > table > tbody > tr:nth-child(1) { display:none; } /* bottom change page */
+#aspnetForm[action^="topics.aspx"] .ContentPanel > table:nth-child(12) table td p { margin:5px; padding:0;} /* bottom change page */
+#aspnetForm[action^="topics.aspx"] .ContentPanel > center { display: none; } /* ad after bottom change page */
 #aspnetForm[action^="topics.aspx"] .DivBoxContainer { display:none; } /* bottom disclaimer */
+#aspnetForm[action^="topics.aspx"] .DivBoxContainer ~ table { display:none; } /* icon legend */
 #aspnetForm[action^="topics.aspx"] .FooterPanel { display:none; }
-#aspnetForm[action^="topics.aspx"] div.Topic_ListPanel > table:last-child { display:none; }
-#aspnetForm[action^="topics.aspx"] div.Topic_ListPanel td[height="52"] { height:1px; }
-#aspnetForm[action^="topics.aspx"] div.Topic_ListPanel th { background-color:white !important; color:black !important; }
+#aspnetForm[action^="topics.aspx"] .FooterPanel + div { display:none; } /* yellow line */
+#aspnetForm[action^="topics.aspx"] .FooterPanel + div + div { display:none; } /* last visiting etc */
 
+#aspnetForm[action^="topics_html.aspx"] .ContentPanel > br { display: none; }
+#aspnetForm[action^="topics_html.aspx"] [id^="Right Textlink Zone"] ~ a { display:none; } /* ad under search */
 #aspnetForm[action^="topics_html.aspx"] > table { display:none; } /* top menu */
 #aspnetForm[action^="topics_html.aspx"] > div { margin-top:15px; } /* extra space for the new menubar */
-#aspnetForm[action^="topics_html.aspx"] #PageMiddlePanel > div > div > div:nth-child(2) > table { display:none; } /* promotion box */
 #aspnetForm[action^="topics_html.aspx"] .PageMiddleFunctions { display:none; } /* top change lang and share bar */
-#aspnetForm[action^="topics_html.aspx"] .ContentPanel > table { display:none; }
+#aspnetForm[action^="topics_html.aspx"] .ContentPanel > table:first-of-type { display:none; }
 #aspnetForm[action^="topics_html.aspx"] .Topic_ListPanel > div > div { background:none !important; }
 #aspnetForm[action^="topics_html.aspx"] .Topic_ListPanel > div > div > table:first-child { background-color:gray !important; }
 #aspnetForm[action^="topics_html.aspx"] .PageMiddleBox { background:none !important;}
-#aspnetForm[action^="topics_html.aspx"] #MiddlePageAd1 { display:none; }
+#aspnetForm[action^="topics_html.aspx"] .ContentPanel > table:nth-child(12) > tbody > tr > td > table > tbody > tr:nth-child(1) { display:none; } /* bottom change page */
+#aspnetForm[action^="topics_html.aspx"] .ContentPanel > table:nth-child(12) table td p { margin:5px; padding:0;} /* bottom change page */
+#aspnetForm[action^="topics_html.aspx"] .ContentPanel > center { display: none; } /* ad after bottom change page */
 #aspnetForm[action^="topics_html.aspx"] .DivBoxContainer { display:none; } /* bottom disclaimer */
+#aspnetForm[action^="topics_html.aspx"] .DivBoxContainer ~ table { display:none; } /* icon legend */
 #aspnetForm[action^="topics_html.aspx"] .FooterPanel { display:none; }
-#aspnetForm[action^="topics_html.aspx"] div.Topic_ListPanel > table:last-child { display:none; }
-#aspnetForm[action^="topics_html.aspx"] div.Topic_ListPanel td[height="52"] { height:1px; }
-#aspnetForm[action^="topics_html.aspx"] div.Topic_ListPanel th { background-color:white !important; color:black !important; }
+#aspnetForm[action^="topics_html.aspx"] .FooterPanel + div { display:none; } /* yellow line */
+#aspnetForm[action^="topics_html.aspx"] .FooterPanel + div + div { display:none; } /* last visiting etc */
 
 /* content page */
 #aspnetForm[action^="view.aspx"] > table { display:none; } /* top nav bar with logo */
