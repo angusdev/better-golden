@@ -483,6 +483,7 @@ function menubar(page) {
   if (page == 'topics') {
     $('#ellab-markread-btn').style.display = 'none';
     $('#ellab-imagesize-btn').style.display = 'none';
+    $('#ellab-blockquote-btn').style.display = 'none';
     $('#ellab-tweet-btn').style.display = 'none';
     if (!g_is_blur) {
       // if g_is_blur == false, there is only options button and reload btn, better to hide it
