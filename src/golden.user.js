@@ -188,6 +188,11 @@ function parse_view_url(url) {
 }
 
 function guess_time_format(time) {
+  if (g_options.timeformat) {
+    return g_options.timeformat;
+  }
+
+  // below is for fallback
   if (typeof(time) !== 'string') {
     return GOLDEN_TIMEFMT_2;
   }
@@ -1176,7 +1181,7 @@ function view_expand_youtube() {
             [duration, view, rating, likes, dislikes]
             .join(',').replace(/\s*,\s*(,\s*)+/g, ',').replace(/^\s*,?/, '').replace(/,?\s*$/, '').replace(/,/g, ', ');
 
-          timestamp = moment(timestamp, 'YYYY-MM-DDTHH:mm:ss.SSSZ').zone(new Date().getTimezoneOffset()).lang('en').format(GOLDEN_TIMEFMT);
+          timestamp = moment(timestamp, 'YYYY-MM-DDTHH:mm:ss.SSSZ').zone(new Date().getTimezoneOffset()).lang('en').format(guess_time_format(null));
           spanTitle.innerHTML = utils.encodeHTML(data.entry.title.$t);
           spanTimestamp.setAttribute('strfmt', timestamp + ' (%s) '  + addinfo);
           spanTimestamp.setAttribute('fromtime', timestamp);

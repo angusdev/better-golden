@@ -25,6 +25,14 @@ function init() {
     }
   });
 
+
+  var timeformat = g_options['timeformat'];
+  if (timeformat) {
+    $('#time-format-input').val(timeformat);
+
+    $('#time-format-select').val(timeformat);
+  }
+
   $('button').button();
   $('.radioset').buttonset();
   $('input:text, input:password')
@@ -67,6 +75,25 @@ function init() {
     slide: function(event, ui ) {
       $('#idle-time').html(idleTime[ui.value].name);
       storage.set({ idle: idleTime[ui.value].duration });
+    }
+  });
+
+  $('#time-format-select').change(function() {
+    $('#time-format-input').val($(this).val());
+    if ($(this).val()) {
+      storage.set({ timeformat: $(this).val() });
+    }
+  });
+
+  $('#time-format-input').change(function() {
+    if ($(this).val()) {
+      storage.set({ timeformat: $(this).val() });
+    }
+  });
+
+  $('#time-format-input').bind('keypress', function() {
+    if ($(this).val()) {
+      storage.set({ timeformat: $(this).val() });
     }
   });
 

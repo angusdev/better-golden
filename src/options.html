@@ -68,6 +68,19 @@ a:hover {
   <div class='right text label'>閒置:</div><div><input type='text' class='url' /></div>
 </div>
 <div class='row'>
+  <div class='label'>時間格式:</div>
+  <div>
+    <input type='text' id='time-format-input' />
+    <select id='time-format-select'>
+      <option value=''>自訂</option>
+      <option value='M/D/YYYY h:mm A'>12/31/2013 3:12 PM (M/D/YYYY h:mm A)</option>
+      <option value='D/M/YYYY h:mm A'>31/12/2014 3:12 PM (D/M/YYYY h:mm A)</option>
+      <option value='M/D/YYYY HH:mm'>12/31/2014 15:12 (M/D/YYYY HH:mm)</option>
+      <option value='D/M/YYYY HH:mm'>31/12/2014 15:12 (D/M/YYYY HH:mm)</option>
+    <select>
+  </div>
+</div>
+<div class='row'>
   <div class='label'>閒置時間:</div><div id='idle-time'></div><div id='idle-time-slider'></div>
 </div>
 <div class='row'>

@@ -33,6 +33,7 @@ function message_get_options(request, sender, sendResponse) {
     version: 1.0,
     favicon: 1,
     idle: 2 * 60 * 60 * 1000,
+    timeformat: 'D/M/YYYY HH:mm',
     imagewidth: 100,
     menupos: 'top',
     menubtnstyle: 'both',
@@ -44,7 +45,7 @@ function message_get_options(request, sender, sendResponse) {
     wheel: false
   };
 
-  chrome.storage.local.get(['version', 'favicon', 'idle', 'menupos', 'menubtnstyle',
+  chrome.storage.local.get(['version', 'favicon', 'idle', 'timeformat', 'menupos', 'menubtnstyle',
                             'blur', 'disablesensor', 'imagewidth', 'youtube', 'scrollmarkread',
                             'collapsequickreply', 'wheel'], function(obj) {
     var options = {};
