@@ -82,11 +82,13 @@ embed[src*="bmediaasia.com"], embed[src*="fortunepharm.com"],
 *[id*="GenMainPageAd"], *[id*="google_ads_frame"],
 *[id*="aswift"], span[id*="tempAd"] { display:none; }
 
-
 /* hide the main body part of notice box on top */
 .DivResizableBoxTitle { display:none; }
 .DivResizableBoxDetails { overflow: hidden; height: 1.5em; border-width: 1px !important; }
 .DivResizableBoxDetails > strong + img { display:none; }
+
+/* hide verifiction notice */
+.TransparentGrayBackground, .noticeText { display: none; }
 
 /* hide nested quote */
 td > div > blockquote > div > blockquote > div > blockquote > div > blockquote:before { content:"<<< ... >>>\A"; white-space: pre-wrap; }
@@ -325,6 +327,17 @@ a.novisited:hover {
 .ellab-image-size-label {
   margin: 5px;
   font-family: "helvetica neue", "helvetica", "Arial";
+}
+
+.ellab-paging-div > div:first-child {
+  display: none;
+}
+.ellab-paging-div > div {
+  padding: 5px !important;
+}
+
+.ellab-next-page-content-div {
+  margin-top: 7px;
 }
 
 blockquote {

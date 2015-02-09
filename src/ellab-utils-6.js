@@ -159,7 +159,7 @@ org.ellab.utils.arr_first = function(arr) {
   else {
     return null;
   }
-}
+};
 
 org.ellab.utils.arr_last = function(arr) {
   if (Object.prototype.toString.call(arr) === '[object Array]' && arr.length > 0) {
@@ -168,7 +168,7 @@ org.ellab.utils.arr_last = function(arr) {
   else {
     return null;
   }
-}
+};
 
 // return the first element instead of an array if the selector is simply an id
 org.ellab.utils.sizzleSmart = function(selector, context, results, seed) {
@@ -422,6 +422,26 @@ org.ellab.utils.prevSibling = function(node, tagOrCallback, immediateSiblingOnly
   }
   else {
     return this.prevSibling(prevSibling, tagOrCallback, immediateSiblingOnly);
+  }
+};
+
+// iterate the nextSibling nodes until match the tag name
+org.ellab.utils.nextSibling = function(node, tagOrCallback, immediateSiblingOnly) {
+  if (!node) return node;
+
+  var nextSibling = node.nextSibling;
+
+  if (!nextSibling || !tagOrCallback) return nextSibling;
+
+  if (typeof tagOrCallback === 'string' && nextSibling.nodeType !== 3 && nextSibling.tagName && nextSibling.tagName.toUpperCase() == tagOrCallback.toUpperCase()) return nextSibling;
+
+  if (typeof tagOrCallback === 'function' && tagOrCallback.apply(nextSibling)) return nextSibling;
+
+  if (immediateSiblingOnly) {
+    return null;
+  }
+  else {
+    return this.nextSibling(nextSibling, tagOrCallback, immediateSiblingOnly);
   }
 };
 

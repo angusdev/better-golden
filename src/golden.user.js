@@ -116,6 +116,34 @@ function createDocument(obj) {
   }
 }
 
+function get_page_bottom_paging_element(doc) {
+  // div
+  // div <-- this
+  //   div
+  //     div
+  //       ...
+  //       select[name="page"]
+  //var insertBeforeNode = utils.parent(utils.arr_last($('select[name="page"]')), function() {
+    //return this.tagName && this.tagName.toUpperCase() === 'DIV' && utils.prevSibling(this, 'br') !== null;
+  //});
+  doc = doc || document;
+
+  return utils.parent(utils.parent(utils.parent(utils.arr_last($('select[name="page"]', doc)), 'div'), 'div'), 'div');
+}
+
+function get_new_thread_insert_before_node() {
+  var insertBeforeNode = get_page_bottom_paging_element();
+
+  if (insertBeforeNode) {
+    insertBeforeNode = utils.nextSibling(insertBeforeNode, 'div');
+  }
+  else {
+    insertBeforeNode = $('#newmessage');
+  }
+
+  return insertBeforeNode;
+}
+
 function ajax_queue_worker() {
   var task = g_ajaxQueue.shift();
   if (task && task.url && task.callback) {
@@ -666,6 +694,7 @@ function view_show_page_count() {
 
     }
     meta('curr-page', currPage);
+    meta('last-load-page', currPage);
     meta('last-page', lastPage);
   }
 }
@@ -1013,9 +1042,11 @@ function view_parse_ajax(t, nodom) {
   }
 
   var threads = null;
+  var paging = null;
   if (!nodom) {
     var doc = createDocument(t);
     threads = view_parse_thread_list(doc);
+    paging = get_page_bottom_paging_element(doc);
   }
 
   return {
@@ -1023,7 +1054,8 @@ function view_parse_ajax(t, nodom) {
     title: title,
     hasPrev: hasPrev,
     hasNext: hasNext,
-    lastPage: lastPage
+    lastPage: lastPage,
+    paging: paging
   };
 }
 
@@ -1281,6 +1313,54 @@ function view_favicon() {
   }
 }
 
+function view_show_next_page() {
+  if (meta('last-load-page') === meta('last-page')) return;
+
+  var nextPage = meta_int('last-load-page') + 1;
+
+  var url = document.location.href;
+  if (url.match(/page=\d+/)) {
+    url = url.replace(/page=\d+/, 'page=' + nextPage);
+  }
+  else {
+    url = url + '&page=' + nextPage;
+  }
+
+  utils.crossOriginXMLHttpRequest({
+    url: url,
+    method: 'get',
+    onload: function(response) {
+      view_show_next_page_onload(response.responseText, nextPage);
+    }
+  });
+}
+
+function view_show_next_page_onload(t, page) {
+  var parsed = view_parse_ajax(t);
+  if (!parsed) return;
+
+  var div = document.createElement('div');
+  div.className = 'ellab-next-page-content-div';
+  utils.each(parsed.threads, function(i) {
+    div.appendChild(this.node);
+    g_threads.push(this);
+  });
+
+
+  var insertBeforeNode = get_new_thread_insert_before_node();
+  if (insertBeforeNode) {
+    insertBeforeNode.parentNode.insertBefore(div, insertBeforeNode);
+
+    if (parsed.paging) {
+      parsed.paging.className += ' ellab-paging-div';
+      insertBeforeNode.parentNode.insertBefore(parsed.paging, insertBeforeNode);
+    }
+
+    meta('last-load-page', page);
+    view_on_new_thread_load();
+  }
+}
+
 function view_story_mode() {
   // A trick here, the normal url is authorOnly=true, but =True also work, so we use this as
   // indicator to auto load all pages
@@ -1494,16 +1574,7 @@ function view_story_mode_page_check_content(userId, page, parsed) {
     return null;
   }
 
-  // br
-  //     <-- insert here
-  // div
-  //   div
-  //     ...
-  //       select[name="page"]
-  var insertBeforeNode = utils.parent(utils.arr_last($('select[name="page"]')), function() {
-    return this.tagName && this.tagName.toUpperCase() === 'DIV' && utils.prevSibling(this, 'br') !== null;
-  });
-  insertBeforeNode = insertBeforeNode || $('#newmessage');
+  var insertBeforeNode = get_new_thread_insert_before_node();
   if (insertBeforeNode === null) {
     return null;
   }
@@ -1605,6 +1676,8 @@ function view() {
   time = performance('view_smart_timestamp', time);
   view_check_more();
   time = performance('view_check_more', time);
+  view_show_next_page();
+  time = performance('view_show_next_page', time);
   view_story_mode();
   time = performance('view_story_mode', time);
 
