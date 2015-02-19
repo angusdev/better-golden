@@ -910,7 +910,7 @@ function view_prevnextbar() {
   next.className = 'ellab-prevnext-bar';
   document.body.appendChild(next);
 
-  var pageWidthContainer = xpath('//div[@id="PageMiddlePanel"]/div[@class="PageWidthContainer"]');
+  var pageWidthContainer = $1('div#PageMiddlePanel > div.PageWidthContainer');
   if (pageWidthContainer) {
     var left = utils.calcOffsetLeft(pageWidthContainer);
     left -= 5;
@@ -924,7 +924,7 @@ function view_prevnextbar() {
   }
 
   function p_next_page() {
-    utils.inject('changePage(' + (meta_int('curr-page', 0) + 1) + ')');
+    utils.inject('changePage(' + (meta_int('last-load-page', 0) + 1) + ')');
   }
 
   prev.addEventListener('click', p_prev_page, false);
@@ -933,7 +933,7 @@ function view_prevnextbar() {
   if (meta_int('curr-page', 0) <= 1) {
     prev.style.display = 'none';
   }
-  if (meta_int('curr-page', 0) == meta_int('last-page', 0)) {
+  if (meta_int('last-load-page', 0) == meta_int('last-page', 0)) {
     next.style.display = 'none';
   }
 
