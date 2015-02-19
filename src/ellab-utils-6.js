@@ -539,6 +539,10 @@ org.ellab.utils.toggleClass = function(ele, clazz) {
   }
 };
 
+org.ellab.utils.insertBefore = function(newnode, oldnode) {
+  oldnode.parentNode.insertBefore(newnode, oldnode);
+};
+
 org.ellab.utils.insertAfter = function(newnode, oldnode) {
   oldnode.parentNode.insertBefore(newnode, oldnode.nextSibling);
 };
