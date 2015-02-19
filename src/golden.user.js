@@ -676,24 +676,25 @@ function view_notice(m) {
 
 // show the page count besides the page dropdown
 function view_show_page_count() {
-  var res = xpathl('//select[@name="page"]');
-  if (res.snapshotLength > 0) {
-    var currPage = xpath('//select[@name="page"]/option[@selected]').value;
-    var lastPage = res.snapshotItem(i).getElementsByTagName('option')[res.snapshotItem(i).getElementsByTagName('option').length - 1].value;
-    for (var i=0; i<res.snapshotLength; i++) {
-      var select = res.snapshotItem(i);
+  var res = $('select[name="page"]:not([data-ellab-processed])');
+  if (res.length > 0) {
+    var currPage = $1('option[selected]', res[res.length-1]).value;
+    var lastPage = $1('option:last-child', res[res.length-1]).value;
+    utils.each(res, function() {
       var a = document.createElement('a');
       a.innerHTML = lastPage;
       a.className = 'ellab-last-page';
       /*jshint scripturl:true */
       a.href = 'javascript:changePage(' + lastPage + ')';
       /*jshint scripturl:false */
-      select.parentNode.insertBefore(a, select.nextSibling);
+      utils.insertAfter(a, this);
       var t = document.createTextNode(' / ');
-      select.parentNode.insertBefore(t, a);
-
+      utils.insertBefore(t, a);
+      this.setAttribute('data-ellab-processed', 'true');
+    });
+    if (!meta('curr-page')) {
+      meta('curr-page', currPage);
     }
-    meta('curr-page', currPage);
     meta('last-load-page', currPage);
     meta('last-page', lastPage);
   }
@@ -1610,6 +1611,7 @@ function view_story_mode_page_check_content(userId, page, parsed) {
 }
 
 function view_on_new_thread_load() {
+  view_show_page_count();
   view_clean_content();
   view_smart_timestamp();
   view_expand_youtube();
