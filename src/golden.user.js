@@ -466,11 +466,7 @@ function view_onready() {
   } while (intervalId--);
 
   g_threads = view_parse_thread_list();
-  if (g_threads.length > 0) {
-    meta('thread-no', g_threads[g_threads.length - 1].threadId);
-    meta('curr-thread', g_threads[g_threads.length - 1].threadId);
-    g_lastThreadNode = g_threads[g_threads.length - 1].node;
-  }
+  view_reset_thread_metadata();
 
   document.title = view_parse_ajax_title(document.head.innerHTML) || document.title;
   meta('title', document.title);
@@ -483,12 +479,24 @@ function view_onready() {
     chrome.extension.sendMessage({msgId: 'add_message_history', msg: { msgId:parsed.msgId, pageNum: parsed.pageNum }});
 
   }
+  meta('last-load-page-url', document.location.href);
   meta('golden-show-url', 'http://ellab.org/goldenshow.php#hkg' + meta('server') + '/' + meta('msg-id'));
 
   if (DEBUG) {
     xpathl('//div[@id="ctl00_ContentPlaceHolder1_view_form"]/div').each(function(i) {
       this.setAttribute('ellab-debug-div', i);
     });
+  }
+}
+
+function view_reset_thread_metadata() {
+  if (g_threads.length > 0) {
+    // thread-no is the last 'read' thread, curr-thread is the last 'displayed' thread
+    // after check_more, the curr-thread - thread-no threads will be marked as unread
+    // after mark_as_read they will be same
+    meta('thread-no', g_threads[g_threads.length - 1].threadId);
+    meta('curr-thread', g_threads[g_threads.length - 1].threadId);
+    g_lastThreadNode = g_threads[g_threads.length - 1].node;
   }
 }
 
@@ -829,10 +837,10 @@ function view_clean_layout() {
 
 // setup the timer to check more replies
 function view_check_more() {
-  if (meta('curr-page') !== meta('last-page')) return;
+  if (meta('last-load-page') !== meta('last-page')) return;
 
   utils.crossOriginXMLHttpRequest({
-    url: document.location.href,
+    url: meta('last-load-page-url'),
     method: 'get',
     onload: function(response) {
       view_check_more_check_content(response.responseText);
@@ -898,6 +906,37 @@ function view_check_more_check_content(t) {
     if (parsed.lastPage) {
       $e('.ellab-last-page', function() {
         this.innerHTML = parsed.lastPage;
+      });
+      // show the next page link
+      $e('select[name="page"]', function() {
+        var pageDiv = utils.parent(this, 'div', true);
+        if (pageDiv) {
+          var div = utils.parent(pageDiv, 'div');
+          if (div) {
+            if ($1('[data-role="nextpage"]', div)) {
+              // the next page link already there
+              return true;
+            }
+            var newdiv = document.createElement('div');
+            newdiv.setAttribute('style', 'text-align:right;');
+            newdiv.setAttribute('data-role', 'nextpage');
+            newdiv.innerHTML = '<a href="javascript:changePage(' + parsed.lastPage + ')">下一頁</a> ' +
+                               '<a href="javascript:changePage(' + parsed.lastPage + ')">' +
+                               '<img style="border-width: 0px; vertical-align: middle;" src="images/button-next.gif" alt="Next"></a>';
+            div.appendChild(newdiv);
+            var floatsClearing = $1('.FloatsClearing', div);
+            if (floatsClearing) {
+              div.removeChild(floatsClearing);
+            }
+
+            pageDiv.style.width = '80%';
+            pageDiv.style.float = 'left';
+            var prevDiv = utils.prevSibling(pageDiv, 'div');
+            if (prevDiv) {
+              prevDiv.style.width = '10%';
+            }
+          }
+        }
       });
     }
     change_favicon('NEW_MESSAGE');
@@ -1341,12 +1380,12 @@ function view_show_next_page() {
     url: url,
     method: 'get',
     onload: function(response) {
-      view_show_next_page_onload(response.responseText, nextPage);
+      view_show_next_page_onload(response.responseText, url, nextPage);
     }
   });
 }
 
-function view_show_next_page_onload(t, page) {
+function view_show_next_page_onload(t, url, page) {
   var parsed = view_parse_ajax(t);
   if (!parsed) return;
 
@@ -1356,7 +1395,6 @@ function view_show_next_page_onload(t, page) {
     div.appendChild(this.node);
     g_threads.push(this);
   });
-
 
   var insertBeforeNode = get_new_thread_insert_before_node();
   if (insertBeforeNode) {
@@ -1368,7 +1406,12 @@ function view_show_next_page_onload(t, page) {
     }
 
     meta('last-load-page', page);
+    meta('last-load-page-url', url);
+    view_reset_thread_metadata();
     view_on_new_thread_load();
+    if (!parsed.hasNext) {
+      $1('#ellab-next-bar').style.display = 'none';
+    }
   }
 }
 
