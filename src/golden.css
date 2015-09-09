@@ -54,7 +54,8 @@ body { background-image:none !important; }
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(1) { display:none; }
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) #MainPageAd2 { display:none; } /* ad */
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) #ctl00_ContentPlaceHolder1_lb_UserName { display:none; } /* username */
-#ctl00_ContentPlaceHolder1_view_form > div:nth-child(2) .DivResizableBoxContainer { display:none; } /* golden internal ad */
+#ctl00_ContentPlaceHolder1_view_form > table .DivResizableBoxContainer + div { display:none; } /* golden internal ad */
+#ctl00_ContentPlaceHolder1_view_form > table .DivResizableBoxContainer + div + div { display:none; } /* golden internal ad */
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(3) { display:none; } /* top board name */
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(4) { display:none; } /* top new/reply button */
 #ctl00_ContentPlaceHolder1_view_form > div:nth-child(5) > div:first-child { display:none; } /* top change page - blue bar */
@@ -78,6 +79,7 @@ body { background-image:none !important; }
 
 /* content page, hide some ads */
 iframe[src*="groupbuy.hkgolden.com"], iframe[src*="doubleclick.net"],
+iframe,
 embed[src*="bmediaasia.com"], embed[src*="fortunepharm.com"],
 *[id*="GenMainPageAd"], *[id*="google_ads_frame"],
 *[id*="aswift"], span[id*="tempAd"] { display:none; }

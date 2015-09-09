@@ -778,6 +778,16 @@ function view_clean_content() {
       utils.removeChild(utils.parent(this, 'table'));
     }, null, this);
   });
+
+  $e('.googlelinkback2', function() {
+    var p = utils.parent(this, 'table');
+    while (p && p.parentNode && p.parentNode.tagName.toUpperCase() != 'DIV') {
+      p = utils.parent(p, 'table');
+    }
+    if (p) {
+      utils.removeChild(p);
+    }
+  });
 }
 
 function view_clean_layout() {
