@@ -16,6 +16,8 @@ var PERFORMANCE = false;
 var AJAX_WAIT = 1000; // wait for each ajax call, golden will block too frequent requests
 var AJAX_COOLOFF = 60000;
 
+var YOUTUBE_API_KEY = 'AIzaSyAMmPm60_wWZruodwuYoPs6t6CHvKBaLPo';
+
 var FAVICON = [{}, {}, {}];
 FAVICON[1].NEW_MESSAGE = utils.getResourceURL('new-message', 'images/new-message.png');
 FAVICON[1].NO_MESSAGE = utils.getResourceURL('no-message', 'images/clock.png');
@@ -34,7 +36,6 @@ var g_threads = [];
 var g_lastThreadNode;
 var g_ajaxQueue = [];
 var g_imglist = [];   // store the image in the threads
-var g_youtubelist = []; // store the video id in the threads
 
 function error(m) {
   if (console && typeof console.log !== undefined) {
@@ -64,6 +65,7 @@ function performance(m, time) {
 
 function kmb(n) {
    if (n === 0) return '0';
+   if (n < 1000) return n;
    var k = 1000;
    var sizes = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
    var i = Math.floor(Math.log(n) / Math.log(k));
@@ -1244,27 +1246,24 @@ function view_expand_youtube() {
   function p_view_expand_youtube_load_video_data(spanTitle, spanTimestamp, vid) {
     utils.crossOriginXMLHttpRequest({
       method: 'get',
-      url: 'https://gdata.youtube.com/feeds/api/videos/' + vid + '?v2=&alt=json',
+      url: 'https://www.googleapis.com/youtube/v3/videos?id=' + vid + '&key=' + YOUTUBE_API_KEY + '&part=snippet,contentDetails,statistics',
       type: 'json',
       onload: function(response) {
         var data = utils.parseJSON(response.responseText);
-        if (data && data.entry) {
-          var timestamp = data.entry.published.$t;
-          var rating = data.entry.gd$rating?
-            ('r:' + (Math.round(data.entry.gd$rating.average * 10) / 10) + (' (' + data.entry.gd$rating.numRaters + ')'))
+        if (data && data.items && data.items.length > 0) {
+          var item = data.items[0];
+          var timestamp = item.snippet.publishedAt;
+          var duration = (item.contentDetails && item.contentDetails.duration)?
+            ('&#128338;&nbsp;&nbsp;' + item.contentDetails.duration.replace(/^PT/, '').replace('H', ':').replace('M', ':').replace('S',''))
             :null;
-          var duration = (data.entry.media$group && data.entry.media$group.yt$duration && data.entry.media$group.yt$duration.seconds)?
-            ('d:' + moment.duration(parseInt(data.entry.media$group.yt$duration.seconds, 10), 'seconds').humanize(true))
-            :null;
-          var view = data.entry.yt$statistics?('v:' + kmb(data.entry.yt$statistics.viewCount)):null;
-          var likes = data.entry.yt$rating?('+' + data.entry.yt$rating.numLikes):null;
-          var dislikes = data.entry.yt$rating?('-' + data.entry.yt$rating.numDislikes):null;
-          var addinfo =
-            [duration, view, rating, likes, dislikes]
-            .join(',').replace(/\s*,\s*(,\s*)+/g, ',').replace(/^\s*,?/, '').replace(/,?\s*$/, '').replace(/,/g, ', ');
+          var view = item.statistics?('&#128064;&nbsp;&nbsp;' + kmb(item.statistics.viewCount)):null;
+          var likes = item.statistics?('&#128077;&nbsp;&nbsp;' + kmb(item.statistics.likeCount)):null;
+          var dislikes = item.statistics?('&#128078;&nbsp;&nbsp;' + kmb(item.statistics.dislikeCount)):null;
+          var comment = item.statistics?('&#128221;&nbsp;&nbsp;' + kmb(item.statistics.commentCount)):null;
+          var addinfo = [duration, view, likes, dislikes, comment].join(' ');
 
           timestamp = moment(timestamp, 'YYYY-MM-DDTHH:mm:ss.SSSZ').zone(new Date().getTimezoneOffset()).lang('en').format(guess_time_format(null));
-          spanTitle.innerHTML = utils.encodeHTML(data.entry.title.$t);
+          spanTitle.innerHTML = utils.encodeHTML(item.snippet.title);
           spanTimestamp.setAttribute('strfmt', timestamp + ' (%s) '  + addinfo);
           spanTimestamp.setAttribute('fromtime', timestamp);
           view_update_smart_timestamp();
@@ -1328,16 +1327,17 @@ function view_expand_youtube() {
 }
 
 function view_expand_youtube_enabler() {
+  var youtubelist = [];
   $e('div[ellab-youtube-vid]', function() {
     var youtubeOption = option_equal('youtube', 0)?0:(option_equal('youtube', 1)?1:g_options.youtube);
     var vid = this.getAttribute('ellab-youtube-vid');
     var style = '';
-    if (utils.find(g_youtubelist, function() { return this.toString() == vid; })) {
+    if (utils.find(youtubelist, function() { return this.toString() == vid; })) {
       // force to use thumbnail even the setting is show video
       youtubeOption = option_equal('youtube', 1)?1:0;
       style = ' style="width:50px;"';
     }
-    g_youtubelist.push(vid);
+  youtubelist.push(vid);
 
     if (youtubeOption === 0 || youtubeOption === 1) {
       this.innerHTML = '<img src="http://img.youtube.com/vi/' + vid + '/' + youtubeOption + '.jpg"' + style + ' />';
