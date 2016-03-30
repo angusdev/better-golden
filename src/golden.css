@@ -84,6 +84,9 @@ embed[src*="bmediaasia.com"], embed[src*="fortunepharm.com"],
 *[id*="GenMainPageAd"], *[id*="google_ads_frame"],
 *[id*="aswift"], span[id*="tempAd"] { display:none; }
 
+/* show youtube iframe */
+iframe[src*="youtube.com"] { display: block; }
+
 /* hide the main body part of notice box on top */
 .DivResizableBoxTitle { display:none; }
 .DivResizableBoxDetails { overflow: hidden; height: 1.5em; border-width: 1px !important; }
