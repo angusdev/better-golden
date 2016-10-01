@@ -1,0 +1,32 @@
+body {
+  font-family: Helvetica, "文泉驛正黑", "WenQuanYi Zen Hei", "儷黑 Pro", "LiHei Pro", "微軟正黑體", "Microsoft JhengHei", "標楷體", DFKai-SB, sans-serif;
+  font-size: 14pt;
+  background-color: #e5e5e5;
+}
+
+.navbar {
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+.navbar-right {
+  float: right!important;
+  margin-right: 0;
+}
+}
+
+i.glyphicon {
+  margin-right: 8px;
+}
+
+a:visited {
+  color: purple;
+}
+
+#toc .table th {
+  white-space: nowrap;
+}
+
+#toc .table td:nth-child(n+3), #toc .table th:nth-child(n+3) {
+  text-align: center;
+}

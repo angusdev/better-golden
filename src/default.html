@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Golden</title>
+<link rel="stylesheet" type="text/css" href="lib/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="lib/bootstrap/css/bootstrap-theme.min.css">
+<link rel="stylesheet" type="text/css" href="golden-reader.css">
+<script type="text/javascript" src="lib/jquery-ui/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="golden-reader.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="navbar-header">
+    <span class="navbar-brand">高登 <span data-role="typename"></span> <span data-role="hasupdate" class="glyphicon glyphicon-exclamation-sign" style="display:none;"></span></span>
+  </div>
+  <div class="collapse navbar-collapse navbar-right">
+<!--
+    <div class="nav navbar-text navbar-gameprogress-label">
+      Game Progress
+    </div>
+    <div id="dragon-score-progress" class="nav navbar-text progress" data-trigger="click" data-toggle="popover" data-placement="bottom" data-html="true" title="Game Progress">
+      <div class="progress-bar progress-bar-success" style="width:0%;"></div>
+    </div>
+-->
+    <ul class="nav navbar-nav">
+<!--
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span id='dragon-count'>Loading...</span> <b class="caret"></b></a>
+        <ul class="dropdown-menu" data-role="dragon-type-dropdown">
+          <li><a href="#">Loading...</a></li>
+        </ul>
+      </li>
+-->
+      <!-- Search Box -->
+      <li>
+        <div class="navbar-form">
+          <div class="form-group">
+            <input type="text" class="form-control" placeholder="Search" data-role="search" autofocus="autofocus" />
+          </div>
+        </div>
+      </li>
+      <!-- Reload Nutton -->
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="glyphicon glyphicon-list-alt"></i>請選擇討論區 <b class="caret"></b></a>
+        <ul class="dropdown-menu" data-role="type-dropdown">
+          <li><a href='#' data-type='ET'>娛樂台</a></li>
+          <li><a href='#' data-type='CA'>時事台</a></li>
+          <li><a href='#' data-type='FN'>財經台</a></li>
+          <li><a href='#' data-type='GM'>遊戲台</a></li>
+          <li><a href='#' data-type='HW'>硬件台</a></li>
+          <li><a href='#' data-type='IN'>電訊台</a></li>
+          <li><a href='#' data-type='SW'>軟件台</a></li>
+          <li><a href='#' data-type='MP'>手機台</a></li>
+          <li><a href='#' data-type='AP'>Apps台</a></li>
+          <li><a href='#' data-type='SP'>體育台</a></li>
+          <li><a href='#' data-type='LV'>感情台</a></li>
+          <li><a href='#' data-type='SY'>講故台</a></li>
+          <li><a href='#' data-type='ED'>飲食台</a></li>
+          <li><a href='#' data-type='BB'>親子台</a></li>
+          <li><a href='#' data-type='PT'>寵物台</a></li>
+          <li><a href='#' data-type='TR'>旅遊台</a></li>
+          <li><a href='#' data-type='CO'>潮流台</a></li>
+          <li><a href='#' data-type='AN'>動漫台</a></li>
+          <li><a href='#' data-type='TO'>玩具台</a></li>
+          <li><a href='#' data-type='MU'>音樂台</a></li>
+          <li><a href='#' data-type='VI'>影視台</a></li>
+          <li><a href='#' data-type='DC'>攝影台</a></li>
+          <li><a href='#' data-type='ST'>學術台</a></li>
+          <li><a href='#' data-type='SC'>校園台</a></li>
+          <li><a href='#' data-type='WK'>上班台</a></li>
+          <li><a href='#' data-type='TS'>汽車台</a></li>
+          <li><a href='#' data-type='RA'>電　台</a></li>
+          <li><a href='#' data-type='AU'>成人台</a></li>
+          <li><a href='#' data-type='MB'>站務台</a></li>
+          <li><a href='#' data-type='AC'>活動台</a></li>
+          <li><a href='#' data-type='JT'>直播台</a></li>
+          <li><a href='#' data-type='EP'>創意台</a></li>
+          <li><a href='#' data-type='BW'>吹水台</a></li>
+        </ul>
+      </li>
+      <!-- Tools -->
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="glyphicon glyphicon-cog"></i>Tools <b class="caret"></b></a>
+        <ul class="dropdown-menu">
+          <li><a href="#" data-role="manage-mydragon"><i class="glyphicon glyphicon-star"></i>My Dragons</a></li>
+          <li class="divider"></li>
+          <li><a href="storage.html" target="_blank"><i class="glyphicon glyphicon-eye-open"></i>Message History</a></li>
+          <li class="divider"></li>
+          <li><a href="https://itunes.apple.com/app/dragon-story/id513474544" target="_blank"><i class="glyphicon glyphicon-cloud-download"></i>iOS App</a></li>
+          <li><a href="https://play.google.com/store/apps/details?id=com.teamlava.dragon" target="_blank"><i class="glyphicon glyphicon-cloud-download"></i>Android App</a></li>
+          <li class="divider"></li>
+          <li><a href="http://forums.storm8.com/forumdisplay.php?209-Dragon-Story" target="_blank"><i class="glyphicon glyphicon-comment"></i>Forum</a></li>
+          <li><a href="http://dragon-story.wikia.com/" target="_blank"><i class="glyphicon glyphicon-link"></i>Wikia</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div id="container">
+  <div id="toc">
+    <table class="table table-condensed table-striped table-bordered table-hover">
+      <thead>
+        <tr>
+          <th rowspan="2">頁</th>
+          <th rowspan="2">題目</th>
+          <th rowspan="2">發起人</th>
+          <th rowspan="2">最後回應時間</th>
+          <th rowspan="2">回覆</th>
+          <th rowspan="2">評分</th>
+          <th colspan="5">回覆</th>
+        </tr>
+        <tr>
+          <th>十五分鐘</th>
+          <th>一小時</th>
+          <th>二小時</th>
+          <th>六小時</th>
+          <th>一天</th>
+        </tr>
+      </thead>
+      <tbody id="toc_body">
+      </tbody>
+  </div>
+</div>
+</body>
+</html>
