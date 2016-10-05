@@ -26,5 +26,10 @@
   "web_accessible_resources": ["lib/sizzle-1.10.19.min.map",
                                "images/clock.png",
                                "images/golden-favicon.png", "images/golden-favicon-blank.png",
-                               "images/new-message.png", "images/new-message-blank.png"]
+                               "images/new-message.png", "images/new-message-blank.png"],
+  "app": {
+    "launch": {
+      "local_path": "default.html"
+    }
+  }
 }
