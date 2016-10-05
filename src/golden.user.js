@@ -64,7 +64,7 @@ function performance(m, time) {
 }
 
 function kmb(n) {
-   if (n === 0) return '0';
+   if (!n) return '0';
    if (n < 1000) return n;
    var k = 1000;
    var sizes = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
@@ -773,10 +773,23 @@ function view_update_smart_timestamp() {
 
 // remove empty row caused by ad blocker
 function view_remove_ad_empty_row() {
+  /*
   xpathl('//div[@id="ctl00_ContentPlaceHolder1_view_form"]/div/table').each(function() {
     if ((this.innerHTML.indexOf('HKGTopGoogleAd') >= 0 && this.innerHTML.toUpperCase().indexOf('<SPAN ID="HKGTOPGOOGLEAD">') >= 0) ||
         (this.innerHTML.indexOf('MsgInLineAd') >= 0 && this.innerHTML.toUpperCase().indexOf('<SPAN ID="MSGINLINEAD') > 0)) {
       this.style.display = 'none';
+    }
+  });
+  */
+  /*
+  $e('[id*="aswift_"]', function() {
+    utils.removeChild(utils.parent(this, 'table'));
+  });
+  */
+  $e('[class*="-ad-"]', function() {
+    var p = utils.parent(this, 'table');
+    if (p) {
+      p.style.display = 'none';
     }
   });
 }
@@ -1685,6 +1698,8 @@ function topics() {
   time = performance('topics_disable_sensor', time);
   topics_message_history();
   time = performance('topics_message_history', time);
+  topics_update();
+  time = performance('topics_update', time);
   //topics_opened_tabs();
   //time = performance('topics_opened_tabs', time);
   //window.setInterval(function() {
