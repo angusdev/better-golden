@@ -9,6 +9,10 @@ var g_first_message = null;
 
 var g_hkgolden_api_s = '';
 
+var g_curr_page = 1;
+
+var g_detect_scroll;
+
 function encode_html(s) {
   if (s) {
     s = s.replace('&', '&amp;', 'g');
@@ -46,8 +50,35 @@ function ajax(params) {
       }
     }
   }
-  console.log(postData);
+
   xhr.send(postData);
+}
+
+function DetectScroll(callback) {
+  var _instance = this;
+  this._enable = false;
+
+  this._callback = callback;
+
+  this.enable = function() {
+    this._enable = true;
+  };
+
+  this.disable = function() {
+    this._enable = false;
+  };
+
+  window.addEventListener('scroll', function() {
+    if (_instance._enable && _instance._callback) {
+      var st = Math.max(document.documentElement.scrollTop, document.body.scrollTop);
+      if (st <= 0) {
+        _instance._callback.call(window, 'top');
+      }
+      else if ((st + document.documentElement.clientHeight) >= document.documentElement.scrollHeight - 1) {
+        _instance._callback.call(window, 'bottom');
+      }
+    }
+  }, false);
 }
 
 function pad_zero(n) {
@@ -197,9 +228,26 @@ function get_toc(type, page, loadedMessageList, background) {
   });
 }
 
-function get_message(type, message, page) {
-  $('#message-container').show();
+function get_message_main(type, message, page) {
+  g_curr_page = page;
 
+  $('#message-container').show();
+  $('#message-main').html('');
+
+  g_detect_scroll = new DetectScroll(function(pos) {
+    if (pos === 'bottom') {
+      if (!document.getElementById('loading')) {
+        $('#loading-message').html('<div id="loading"><img src="loading.gif" /></div>').show();
+        g_detect_scroll.disable();
+        get_message(type, message, ++g_curr_page);
+      }
+    }
+  });
+
+  get_message(type, message, page);
+}
+
+function get_message(type, message, page) {
   ajax({
     method: 'POST',
     url: 'http://ios-1-3.hkgolden.com/newView.aspx',
@@ -217,25 +265,41 @@ function get_message(type, message, page) {
     onload: function(response) {
       console.log(new Date(), 'Loaded ' + type + ' ' + message + ' ' + page);
       try {
-        console.log(response.responseText);
         var json = JSON.parse(response.responseText);
         if (json.success) {
           var html = '';
-          html += '<div class="message-title">' + json.Message_Title + '</div>';
+          if ($('.message-title').length === 0) {
+            html += '<div class="message-title">' + json.Message_Title + '</div>';
+          }
           for (var i=0 ; i<json.messages.length ; i++) {
             var msg = json.messages[i];
-            var body = msg.Message_Body;
-            body = body.replace(/\&amp;\#(\d+);/g, '&#$1;');
-            html += '<div class="message">' +
-              '<div class="message-author">' + msg.Author_Name + '</div>' +
-              '<div class="message-body">' + body + '</div>' +
-              '</div>';
+            var replyId = message + '-' + page + '-' + (i+1);
+            if ($('[data-reply-id=' + replyId + ']').length === 0) {
+              var body = msg.Message_Body;
+              body = body.replace(/\&amp;\#(\d+);/g, '&#$1;');
+              html += '<div class="message" data-reply-id="' + replyId + '">' +
+                '<div class="reply-author">' + msg.Author_Name + '</div>' +
+                '<div class="reply-body">' + body + '</div>' +
+                '</div>';
+              }
           }
-          document.getElementById('message-main').innerHTML += html;
+          $('#message-main').append($(html));
           var imgs = document.getElementById('message-main').querySelectorAll('img[src^="/"]');
           for (i=0 ; i<imgs.length ; i++) {
             imgs[i].setAttribute('src', 'http://forum' + (parseInt(Math.random() * 10 + 1, 10)) + '.hkgolden.com' + imgs[i].getAttribute('src'));
           }
+
+          if (html) {
+            $('#loading-message').html('').hide();
+          }
+          else {
+            $('#loading-message').html('No More Message');
+            --g_curr_page;
+            window.scrollTo(0, document.body.scrollHeight - document.documentElement.clientHeight - 30);
+          }
+          window.setTimeout(function() {
+            g_detect_scroll.enable();
+          }, 100);
         }
       }
       catch (err) {
@@ -272,7 +336,7 @@ function onhashchanged() {
     $('[data-role="typename"]').html(typename?('(' + typename + ')'):'');
 
     if (hash.length >= 2 && hash.length <=3) {
-      get_message(g_type, hash[1], hash.length === 3?hash.length[2]||1:1);
+      get_message_main(g_type, hash[1], hash.length === 3?hash.length[2]||1:1);
     }
     else {
       chrome.storage.local.get('message_history_' + g_type, function(result) {
