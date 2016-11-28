@@ -1,7 +1,7 @@
 body {
   font-family: Helvetica, "文泉驛正黑", "WenQuanYi Zen Hei", "儷黑 Pro", "LiHei Pro", "微軟正黑體", "Microsoft JhengHei", "標楷體", DFKai-SB, sans-serif;
   font-size: 14pt;
-  background-color: #e5e5e5;
+  _background-color: #e5e5e5;
 }
 
 .navbar {
@@ -23,10 +23,38 @@ a:visited {
   color: purple;
 }
 
+#topics-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 #toc .table th {
   white-space: nowrap;
+  background-color: #e5e5e5;
 }
 
 #toc .table td:nth-child(n+3), #toc .table th:nth-child(n+3) {
   text-align: center;
+}
+
+#message-main .message {
+  padding: 10px;
+  border: solid 1px #ccc;
+  margin-bottom: 10px;
+}
+#message-main .message-title {
+  padding: 10px 0;
+  color: #990033;
+  font-size: 22pt;
+  font-weight: bold;
+}
+#message-main .message-author {
+  color: #0fbff2;
+}
+#message-main .message-body {
+  word-wrap: break-word;
+  word-break: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
 }

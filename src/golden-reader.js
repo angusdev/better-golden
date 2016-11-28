@@ -7,6 +7,8 @@ var g_message_hist = {};
 var g_type = '';
 var g_first_message = null;
 
+var g_hkgolden_api_s = '';
+
 function encode_html(s) {
   if (s) {
     s = s.replace('&', '&amp;', 'g');
@@ -31,7 +33,21 @@ function ajax(params) {
   };
 
   xhr.open(params.method || 'GET', params.url, true);
-  xhr.send();
+  var postData = null;
+  if ('POST' === params.method && params.data) {
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    if (typeof params.data === 'string') {
+      postData = params.data;
+    }
+    else {
+      postData = '';
+      for (var k in params.data) {
+        postData += (postData?'&':'') + k + '=' + encodeURIComponent(params.data[k]);
+      }
+    }
+  }
+  console.log(postData);
+  xhr.send(postData);
 }
 
 function pad_zero(n) {
@@ -57,12 +73,14 @@ function format_time_display(d) {
 }
 
 function get_toc(type, page, loadedMessageList, background) {
+  $('#topics-container').show();
+
   loadedMessageList = loadedMessageList || {};
 
   ajax({
     url: 'http://apps.hkgolden.com/iphone_api/v1_2/newTopics.aspx?type=' + type + '&page=' + page + '&returntype=json&pagesize=18&filtermode=Y&user_id=0&block=Y&sensormode=Y',
     onload: function(response) {
-      console.log(new Date(), "Loaded " + type + " " + page);
+      console.log(new Date(), 'Loaded ' + type + ' ' + page);
       try {
         var json = JSON.parse(response.responseText);
         if (json.success) {
@@ -118,9 +136,12 @@ function get_toc(type, page, loadedMessageList, background) {
             }
 
             if (!background) {
-              html += '<tr' + (loaded?' style="color: red !important;"':'') + '><td>' + page +
-                '</td><td><a href="http://forum14.hkgolden.com/view.aspx?type=' + type +
-                '&message=' + v.Message_ID + '&sensormode=N" target="_blank">' + encode_html(v.Message_Title) +
+              html += '<tr' + (loaded?' style="color: red !important;"':'') + '><td>' +
+                '<a href="http://forum14.hkgolden.com/view.aspx?type=' + type + '&message=' + v.Message_ID + '&sensormode=N" target="_blank">' + page + '</a>' +
+                '</td><td><a href="' +
+//                'http://forum14.hkgolden.com/view.aspx?type=' + type + '&message=' + v.Message_ID + '&sensormode=N' +
+                document.location.href + ',' + v.Message_ID +
+                '" target="_blank">' + encode_html(v.Message_Title) +
                 '</a>';
               var totalPages = Math.ceil(v.Total_Replies/25);
               for (i=2 ; i<=totalPages ; i++) {
@@ -148,9 +169,9 @@ function get_toc(type, page, loadedMessageList, background) {
 
           if (!background) {
             if (page === 1) {
-              document.getElementById('toc_body').innerHTML = '';
+              document.getElementById('toc-body').innerHTML = '';
             }
-            document.getElementById('toc_body').innerHTML += html;
+            document.getElementById('toc-body').innerHTML += html;
           }
 
           console.log(new Date(), "Finish " + type + " " + page);
@@ -166,6 +187,54 @@ function get_toc(type, page, loadedMessageList, background) {
           }
           else {
             get_toc(type, ++page, loadedMessageList, background);
+          }
+        }
+      }
+      catch (err) {
+        console.log(err);
+      }
+    }
+  });
+}
+
+function get_message(type, message, page) {
+  $('#message-container').show();
+
+  ajax({
+    method: 'POST',
+    url: 'http://ios-1-3.hkgolden.com/newView.aspx',
+    data: {
+      block: 'N',
+      filtermode: 'N',
+      limit: 50,
+      message: message,
+      returntype: 'json',
+      s: g_hkgolden_api_s,
+      sensormode: 'N',
+      start: Math.max(0, page - 1) * 50,
+      user_id: 0
+    },
+    onload: function(response) {
+      console.log(new Date(), 'Loaded ' + type + ' ' + message + ' ' + page);
+      try {
+        console.log(response.responseText);
+        var json = JSON.parse(response.responseText);
+        if (json.success) {
+          var html = '';
+          html += '<div class="message-title">' + json.Message_Title + '</div>';
+          for (var i=0 ; i<json.messages.length ; i++) {
+            var msg = json.messages[i];
+            var body = msg.Message_Body;
+            body = body.replace(/\&amp;\#(\d+);/g, '&#$1;');
+            html += '<div class="message">' +
+              '<div class="message-author">' + msg.Author_Name + '</div>' +
+              '<div class="message-body">' + body + '</div>' +
+              '</div>';
+          }
+          document.getElementById('message-main').innerHTML += html;
+          var imgs = document.getElementById('message-main').querySelectorAll('img[src^="/"]');
+          for (i=0 ; i<imgs.length ; i++) {
+            imgs[i].setAttribute('src', 'http://forum' + (parseInt(Math.random() * 10 + 1, 10)) + '.hkgolden.com' + imgs[i].getAttribute('src'));
           }
         }
       }
@@ -197,15 +266,22 @@ function housekeep() {
 
 function onhashchanged() {
   if (document.location.hash) {
-    g_type = document.location.hash.substring(1);
+    var hash = document.location.hash.substring(1).split(',');
+    g_type = hash[0];
     var typename = $('[data-role="type-dropdown"] a[data-type="' + g_type + '"]').html();
     $('[data-role="typename"]').html(typename?('(' + typename + ')'):'');
-    chrome.storage.local.get('message_history_' + g_type, function(result) {
-      g_message_hist = result['message_history_' + g_type] || {};
-      housekeep();
 
-      get_toc(g_type, 1);
-    });
+    if (hash.length >= 2 && hash.length <=3) {
+      get_message(g_type, hash[1], hash.length === 3?hash.length[2]||1:1);
+    }
+    else {
+      chrome.storage.local.get('message_history_' + g_type, function(result) {
+        g_message_hist = result['message_history_' + g_type] || {};
+        housekeep();
+
+        get_toc(g_type, 1);
+      });
+    }
   }
   else {
     window.location.hash = 'CA';
