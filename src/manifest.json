@@ -22,7 +22,7 @@
     }
   ],
   "options_page": "options.html",
-  "permissions": [ "storage", "tabs" ],
+  "permissions": [ "storage", "tabs", "http://ellab.org/*" ],
   "web_accessible_resources": ["loading.gif",
                                "lib/sizzle-1.10.19.min.map",
                                "images/clock.png",

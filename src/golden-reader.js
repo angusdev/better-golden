@@ -7,7 +7,6 @@ var g_message_hist = {};
 var g_type = '';
 var g_first_message = null;
 
-var g_hkgolden_api_s = '';
 var PAGE_SIZE = 50;
 
 var g_curr_page = 1;
@@ -22,6 +21,21 @@ function encode_html(s) {
     s = s.replace('"', '&quot;', 'g');
   }
   return s;
+}
+
+function ajax_get_message(message, start, callback) {
+  ajax({
+    url: 'http://ellab.org/hkgolden/hkgoldenapi?m=' + message + '&s=' + start,
+    onload: function(response) {
+      try {
+        var json = JSON.parse(response.responseText);
+        callback.call(this, json);
+      }
+      catch (err) {
+        console.log('ajax_get_message error', err);
+      }
+    }
+  });
 }
 
 function ajax(params) {
@@ -284,74 +298,58 @@ function get_message_main(type, message, page) {
 }
 
 function get_message(type, message, page) {
-  ajax({
-    method: 'POST',
-    url: 'http://ios-1-3.hkgolden.com/newView.aspx',
-    data: {
-      block: 'N',
-      filtermode: 'N',
-      limit: PAGE_SIZE,
-      message: message,
-      returntype: 'json',
-      s: g_hkgolden_api_s,
-      sensormode: 'N',
-      start: Math.max(0, page - 1) * PAGE_SIZE,
-      user_id: 0
-    },
-    onload: function(response) {
-      console.log(new Date(), 'Loaded ' + type + ' ' + message + ' ' + page);
-      try {
-        var json = JSON.parse(response.responseText);
-        if (json.success) {
-          var html = '';
-          var realPage = (page-1) * 2 + 1;
-          if ($('.message-title').length === 0) {
-            html += '<div class="message-title">' + json.Message_Title + '</div>';
-          }
-          for (var i=0 ; i<json.messages.length ; i++) {
-            var msg = json.messages[i];console.log(msg);
-            realPage = i>=25 ? (page*2) : ((page-1)*2+1);
-            if (i === 0 || i === 25) {
-              if ($('[data-reply-page=' + realPage + ']').length === 0) {
-                html += '<div class="reply-page" data-reply-page="' + realPage + '">第 ' + realPage + ' 頁</div>';
-              }
-            }
-            var replyId = message + '-' + page + '-' + (i+1);
-            var replyNum = (page - 1) * PAGE_SIZE + i;
-            var replyTime = msg.Message_Date?msg.Message_Date.match(/\((\d+)\)/):null;
-            replyTime = replyTime?from_now(replyTime[1]):'';
-            if ($('[data-reply-id=' + replyId + ']').length === 0) {
-              var body = msg.Message_Body;
-              body = body.replace(/\&amp;\#(\d+);/g, '&#$1;');
-              html += '<div class="message" data-reply-id="' + replyId + '">' +
-                '<div class="reply-author"><span class="reply-num">#' + replyNum + '</span> ' +
-                msg.Author_Name + (replyTime?' <span class="reply-time">\u00B7 ' + replyTime + '</span>':'')+ '</div>' +
-                '<div class="reply-body">' + body + '</div>' +
-                '</div>';
-              }
-          }
-          $('#message-main').append($(html));
-          var imgs = document.getElementById('message-main').querySelectorAll('img[src^="/"]');
-          for (i=0 ; i<imgs.length ; i++) {
-            imgs[i].setAttribute('src', 'http://forum' + (parseInt(Math.random() * 10 + 1, 10)) + '.hkgolden.com' + imgs[i].getAttribute('src'));
-          }
-
-          if (html) {
-            $('#loading-message').html('').hide();
-          }
-          else {
-            $('#loading-message').html('頁 ' + realPage + '/' + realPage + ' (' + page + ')');
-            --g_curr_page;
-            window.scrollTo(0, document.body.scrollHeight - document.documentElement.clientHeight - 30);
-          }
-          window.setTimeout(function() {
-            g_detect_scroll.enable();
-          }, 100);
+  ajax_get_message(message, Math.max(0, page - 1) * PAGE_SIZE, function(json) {
+    console.log(new Date(), 'Loaded ' + type + ' ' + message + ' ' + page);
+    try {
+      if (json.success) {
+        var html = '';
+        var realPage = (page-1) * 2 + 1;
+        if ($('.message-title').length === 0) {
+          html += '<div class="message-title">' + json.Message_Title + '</div>';
         }
+        for (var i=0 ; i<json.messages.length ; i++) {
+          var msg = json.messages[i];
+          realPage = i>=25 ? (page*2) : ((page-1)*2+1);
+          if (i === 0 || i === 25) {
+            if ($('[data-reply-page=' + realPage + ']').length === 0) {
+              html += '<div class="reply-page" data-reply-page="' + realPage + '">第 ' + realPage + ' 頁</div>';
+            }
+          }
+          var replyId = message + '-' + page + '-' + (i+1);
+          var replyNum = (page - 1) * PAGE_SIZE + i;
+          var replyTime = msg.Message_Date?msg.Message_Date.match(/\((\d+)\)/):null;
+          replyTime = replyTime?from_now(replyTime[1]):'';
+          if ($('[data-reply-id=' + replyId + ']').length === 0) {
+            var body = msg.Message_Body;
+            body = body.replace(/\&amp;\#(\d+);/g, '&#$1;');
+            html += '<div class="message" data-reply-id="' + replyId + '">' +
+              '<div class="reply-author"><span class="reply-num">#' + replyNum + '</span> ' +
+              msg.Author_Name + (replyTime?' <span class="reply-time">\u00B7 ' + replyTime + '</span>':'')+ '</div>' +
+              '<div class="reply-body">' + body + '</div>' +
+              '</div>';
+            }
+        }
+        $('#message-main').append($(html));
+        var imgs = document.getElementById('message-main').querySelectorAll('img[src^="/"]');
+        for (i=0 ; i<imgs.length ; i++) {
+          imgs[i].setAttribute('src', 'http://forum' + (parseInt(Math.random() * 10 + 1, 10)) + '.hkgolden.com' + imgs[i].getAttribute('src'));
+        }
+
+        if (html && json.messages.length === PAGE_SIZE) {
+          $('#loading-message').html('').hide();
+        }
+        else {
+          $('#loading-message').html('頁 ' + realPage + '/' + realPage + ' (' + page + ')');
+          --g_curr_page;
+          window.scrollTo(0, document.body.scrollHeight - document.documentElement.clientHeight - 30);
+        }
+        window.setTimeout(function() {
+          g_detect_scroll.enable();
+        }, 100);
       }
-      catch (err) {
-        console.log(err);
-      }
+    }
+    catch (err) {
+      console.log(err);
     }
   });
 }
