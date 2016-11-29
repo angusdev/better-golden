@@ -8,6 +8,7 @@ var g_type = '';
 var g_first_message = null;
 
 var g_hkgolden_api_s = '';
+var PAGE_SIZE = 50;
 
 var g_curr_page = 1;
 
@@ -103,6 +104,40 @@ function format_time_display(d) {
     pad_zero(d.getMinutes());
 }
 
+function from_now(obj) {
+  var time = obj;
+  if (typeof obj === 'string') {
+    time = parseInt(obj, 10);
+  }
+  else if (typeof obj === 'object' && obj.getTime) {
+    time = obj.getTime();
+  }
+  var now = new Date();//now = new Date('25 Nov 2016 3:12:23 PM');
+  obj = new Date(time);
+  var diff = (now.getTime() - time) / 1000;
+  if (diff < 60) {
+    return diff + 's';
+  }
+  else if (diff < 60 * 60) {
+    return parseInt(diff / 60, 10) + 'm';
+  }
+  else if (diff < 60 * 60 * 24) {
+    return parseInt(diff / 60 / 60, 10) + 'h';
+  }
+  else {
+    var thisYearMonth = now.getFullYear() * 12 + now.getMonth();
+    var thatYearMonth = obj.getFullYear() * 12 + obj.getMonth();
+    if (thisYearMonth === thatYearMonth ||
+        (thisYearMonth === thatYearMonth + 1 && now.getDate() < obj.getDate())) {
+      // same month, or last month but less than 1 month diff
+      return parseInt(diff / 60 / 60 / 24, 10) + 'd';
+    }
+    else {
+      return (thisYearMonth - thatYearMonth) + 'mon';
+    }
+  }
+}
+
 function get_toc(type, page, loadedMessageList, background) {
   $('#topics-container').show();
 
@@ -153,7 +188,7 @@ function get_toc(type, page, loadedMessageList, background) {
 
             var hist15min, hist1hr, hist2hr, hist6hr, hist24hr;
             hist15min = m.hist['T_' + format_time_key(date, 60 * 15)];
-            for (var i=0 ; !hist1hr && i<3600 ; i+=300) {
+            for (i=0 ; !hist1hr && i<3600 ; i+=300) {
               hist1hr = m.hist['T_' + format_time_key(date, 3600 - i)];
             }
             for (i=0 ; !hist2hr && i<3600 * 2 ; i+=300) {
@@ -244,6 +279,7 @@ function get_message_main(type, message, page) {
     }
   });
 
+  $('#loading-message').html('<div id="loading"><img src="loading.gif" /></div>').show();
   get_message(type, message, page);
 }
 
@@ -254,12 +290,12 @@ function get_message(type, message, page) {
     data: {
       block: 'N',
       filtermode: 'N',
-      limit: 50,
+      limit: PAGE_SIZE,
       message: message,
       returntype: 'json',
       s: g_hkgolden_api_s,
       sensormode: 'N',
-      start: Math.max(0, page - 1) * 50,
+      start: Math.max(0, page - 1) * PAGE_SIZE,
       user_id: 0
     },
     onload: function(response) {
@@ -268,17 +304,28 @@ function get_message(type, message, page) {
         var json = JSON.parse(response.responseText);
         if (json.success) {
           var html = '';
+          var realPage = (page-1) * 2 + 1;
           if ($('.message-title').length === 0) {
             html += '<div class="message-title">' + json.Message_Title + '</div>';
           }
           for (var i=0 ; i<json.messages.length ; i++) {
-            var msg = json.messages[i];
+            var msg = json.messages[i];console.log(msg);
+            realPage = i>=25 ? (page*2) : ((page-1)*2+1);
+            if (i === 0 || i === 25) {
+              if ($('[data-reply-page=' + realPage + ']').length === 0) {
+                html += '<div class="reply-page" data-reply-page="' + realPage + '">第 ' + realPage + ' 頁</div>';
+              }
+            }
             var replyId = message + '-' + page + '-' + (i+1);
+            var replyNum = (page - 1) * PAGE_SIZE + i;
+            var replyTime = msg.Message_Date?msg.Message_Date.match(/\((\d+)\)/):null;
+            replyTime = replyTime?from_now(replyTime[1]):'';
             if ($('[data-reply-id=' + replyId + ']').length === 0) {
               var body = msg.Message_Body;
               body = body.replace(/\&amp;\#(\d+);/g, '&#$1;');
               html += '<div class="message" data-reply-id="' + replyId + '">' +
-                '<div class="reply-author">' + msg.Author_Name + '</div>' +
+                '<div class="reply-author"><span class="reply-num">#' + replyNum + '</span> ' +
+                msg.Author_Name + (replyTime?' <span class="reply-time">\u00B7 ' + replyTime + '</span>':'')+ '</div>' +
                 '<div class="reply-body">' + body + '</div>' +
                 '</div>';
               }
@@ -293,7 +340,7 @@ function get_message(type, message, page) {
             $('#loading-message').html('').hide();
           }
           else {
-            $('#loading-message').html('No More Message');
+            $('#loading-message').html('頁 ' + realPage + '/' + realPage + ' (' + page + ')');
             --g_curr_page;
             window.scrollTo(0, document.body.scrollHeight - document.documentElement.clientHeight - 30);
           }
