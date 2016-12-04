@@ -330,8 +330,22 @@ function remove_cache(key) {
 
 // remove empty row causes by ad blocker
 function topics_remove_ad_empty_row() {
-  xpathl('//div[@class="Topic_ListPanel"]//td[@height="52"]').each(function() {
-    this.parentNode.parentNode.removeChild(this.parentNode);
+  //xpathl('//div[@class="Topic_ListPanel"]//td[@height="52"]').each(function() {
+  //  this.parentNode.parentNode.removeChild(this.parentNode);
+  //});
+  $e('[class*="-ad-"],script[src*="pagead2"]', function() {
+    var p = utils.parent(this, 'tr');
+    if (p) {
+      p.style.display = 'none';
+    }
+  });
+  $e('script', function() {
+    if (this.innerHTML.indexOf('displayads') >= 0) {
+      var p = utils.parent(this, 'tr');
+      if (p) {
+        p.style.display = 'none';
+      }
+    }
   });
 }
 
