@@ -23,6 +23,21 @@ function encode_html(s) {
   return s;
 }
 
+function ajax_get_topics(type, page, callback) {
+  ajax({
+    url: 'http://ellab.org/hkgolden/hkgoldenapi?t=' + type + '&s=' + page,
+    onload: function(response) {
+      try {
+        var json = JSON.parse(response.responseText);
+        callback.call(this, json);
+      }
+      catch (err) {
+        console.log('ajax_get_topics error', err);
+      }
+    }
+  });
+}
+
 function ajax_get_message(message, start, callback) {
   ajax({
     url: 'http://ellab.org/hkgolden/hkgoldenapi?m=' + message + '&s=' + start,
@@ -126,7 +141,7 @@ function from_now(obj) {
   else if (typeof obj === 'object' && obj.getTime) {
     time = obj.getTime();
   }
-  var now = new Date();//now = new Date('25 Nov 2016 3:12:23 PM');
+  var now = new Date();
   obj = new Date(time);
   var diff = (now.getTime() - time) / 1000;
   if (diff < 60) {
@@ -157,122 +172,118 @@ function get_toc(type, page, loadedMessageList, background) {
 
   loadedMessageList = loadedMessageList || {};
 
-  ajax({
-    url: 'http://apps.hkgolden.com/iphone_api/v1_2/newTopics.aspx?type=' + type + '&page=' + page + '&returntype=json&pagesize=18&filtermode=Y&user_id=0&block=Y&sensormode=Y',
-    onload: function(response) {
-      console.log(new Date(), 'Loaded ' + type + ' ' + page);
-      try {
-        var json = JSON.parse(response.responseText);
-        if (json.success) {
-          var html = '';
-          json.topic_list.forEach(function(v, i) {
-            if (background) {
-              if (page === 1 && i === 0 && g_first_message && (g_first_message.Message_ID != v.Message_ID || g_first_message.Total_Replies != v.Total_Replies)) {
-                $('[data-role="hasupdate"]').show();
-              }
+  ajax_get_topics(type, page, function(json) {
+    console.log(new Date(), 'Loaded ' + type + ' ' + page);
+    try {
+      if (json.success) {
+        var html = '';
+        json.topic_list.forEach(function(v, i) {
+          if (background) {
+            if (page === 1 && i === 0 && g_first_message && (g_first_message.Message_ID != v.Message_ID || g_first_message.Total_Replies != v.Total_Replies)) {
+              $('[data-role="hasupdate"]').show();
             }
-            else if(g_first_message === null) {
-              g_first_message = v;
-            }
-
-            var loaded = false;
-            if (loadedMessageList['M' + v.Message_ID]) {
-              loaded = true;
-              //return true;
-            }
-            else {
-              loadedMessageList['M' + v.Message_ID] = true;
-            }
-
-            //var date = new Date(parseInt(v.Last_Reply_Date.match(/\d+/)[0], 10));
-            var date = new Date();
-            var timekey = format_time_key(date);
-
-            var m = g_message_hist['M_' + v.Message_ID];
-            if (!m) {
-              m = {
-                msg_id: v.Message_ID,
-                title: v.Message_Title,
-                author: v.Author_Name,
-                hist: {}
-              };
-              g_message_hist['M_' + v.Message_ID] = m;
-            }
-            m.hist['T_' + timekey] = { t: timekey, r: v.Total_Replies, a: v.Rating };
-
-            var hist15min, hist1hr, hist2hr, hist6hr, hist24hr;
-            hist15min = m.hist['T_' + format_time_key(date, 60 * 15)];
-            for (i=0 ; !hist1hr && i<3600 ; i+=300) {
-              hist1hr = m.hist['T_' + format_time_key(date, 3600 - i)];
-            }
-            for (i=0 ; !hist2hr && i<3600 * 2 ; i+=300) {
-              hist2hr = m.hist['T_' + format_time_key(date, 3600 * 2 - i)];
-            }
-            for (i=0 ; !hist6hr && i<3600 * 6 ; i+=300) {
-              hist6hr = m.hist['T_' + format_time_key(date, 3600 * 6 - i)];
-            }
-            for (i=0 ; !hist24hr && i<3600 * 24 ; i+=300) {
-              hist24hr = m.hist['T_' + format_time_key(date, 3600 * 24 - i)];
-            }
-
-            if (!background) {
-              html += '<tr' + (loaded?' style="color: red !important;"':'') + '><td>' +
-                '<a href="http://forum14.hkgolden.com/view.aspx?type=' + type + '&message=' + v.Message_ID + '&sensormode=N" target="_blank">' + page + '</a>' +
-                '</td><td><a href="' +
-//                'http://forum14.hkgolden.com/view.aspx?type=' + type + '&message=' + v.Message_ID + '&sensormode=N' +
-                document.location.href + ',' + v.Message_ID +
-                '" target="_blank">' + encode_html(v.Message_Title) +
-                '</a>';
-              var totalPages = Math.ceil(v.Total_Replies/25);
-              for (i=2 ; i<=totalPages ; i++) {
-                if (totalPages <= 13 || i <=6 || i >= totalPages - 5) {
-                  html += ' [<a href="http://forum14.hkgolden.com/view.aspx?type=' + type +'&message=' + v.Message_ID + '&page=' + i + '&sensormode=N" target="_blank">' + i + '</a>]';
-                }
-                else {
-                  if (totalPages > 13 && i == 7) {
-                    html += ' ... ';
-                  }
-                }
-              }
-              html += '</td><td>' + encode_html(v.Author_Name) +
-                '</td><td>' + format_time_display(date) +
-                '</td><td>' + v.Total_Replies +
-                '</td><td>' + v.Rating +
-                '</td><td>' + (hist15min?Math.max(0, v.Total_Replies - hist15min.r):'') +
-                '</td><td>' + (hist1hr?Math.max(0, v.Total_Replies - hist1hr.r):'') +
-                '</td><td>' + (hist2hr?Math.max(0, v.Total_Replies - hist2hr.r):'') +
-                '</td><td>' + (hist6hr?Math.max(0, v.Total_Replies - hist6hr.r):'') +
-                '</td><td>' + (hist24hr?Math.max(0, v.Total_Replies - hist24hr.r):'') +
-                '</td></tr>';
-            }
-          });
-
-          if (!background) {
-            if (page === 1) {
-              document.getElementById('toc-body').innerHTML = '';
-            }
-            document.getElementById('toc-body').innerHTML += html;
+          }
+          else if(g_first_message === null) {
+            g_first_message = v;
           }
 
-          console.log(new Date(), "Finish " + type + " " + page);
-          if (page >= 5) {
-            var objectToStore = {};
-            var storageKey = 'message_history_' + g_type;
-            objectToStore[storageKey] = g_message_hist;
-            chrome.storage.local.set(objectToStore, function() {
-              console.log(new Date(), "Saved " + type + " " + page);
-              window.setTimeout(function() { get_toc(type, 1, loadedMessageList, true);}, 30000);
-            });
-            return;
+          var loaded = false;
+          if (loadedMessageList['M' + v.Message_ID]) {
+            loaded = true;
+            //return true;
           }
           else {
-            get_toc(type, ++page, loadedMessageList, background);
+            loadedMessageList['M' + v.Message_ID] = true;
           }
+
+          //var date = new Date(parseInt(v.Last_Reply_Date.match(/\d+/)[0], 10));
+          var date = new Date();
+          var timekey = format_time_key(date);
+
+          var m = g_message_hist['M_' + v.Message_ID];
+          if (!m) {
+            m = {
+              msg_id: v.Message_ID,
+              title: v.Message_Title,
+              author: v.Author_Name,
+              hist: {}
+            };
+            g_message_hist['M_' + v.Message_ID] = m;
+          }
+          m.hist['T_' + timekey] = { t: timekey, r: v.Total_Replies, a: v.Rating };
+
+          var hist15min, hist1hr, hist2hr, hist6hr, hist24hr;
+          hist15min = m.hist['T_' + format_time_key(date, 60 * 15)];
+          for (i=0 ; !hist1hr && i<3600 ; i+=300) {
+            hist1hr = m.hist['T_' + format_time_key(date, 3600 - i)];
+          }
+          for (i=0 ; !hist2hr && i<3600 * 2 ; i+=300) {
+            hist2hr = m.hist['T_' + format_time_key(date, 3600 * 2 - i)];
+          }
+          for (i=0 ; !hist6hr && i<3600 * 6 ; i+=300) {
+            hist6hr = m.hist['T_' + format_time_key(date, 3600 * 6 - i)];
+          }
+          for (i=0 ; !hist24hr && i<3600 * 24 ; i+=300) {
+            hist24hr = m.hist['T_' + format_time_key(date, 3600 * 24 - i)];
+          }
+
+          if (!background) {
+            html += '<tr' + (loaded?' style="color: red !important;"':'') + '><td>' +
+              '<a href="http://forum14.hkgolden.com/view.aspx?type=' + type + '&message=' + v.Message_ID + '&sensormode=N" target="_blank">' + page + '</a>' +
+              '</td><td><a href="' +
+//                'http://forum14.hkgolden.com/view.aspx?type=' + type + '&message=' + v.Message_ID + '&sensormode=N' +
+              document.location.href + ',' + v.Message_ID +
+              '" target="_blank">' + encode_html(v.Message_Title) +
+              '</a>';
+            var totalPages = Math.ceil(v.Total_Replies/25);
+            for (i=2 ; i<=totalPages ; i++) {
+              if (totalPages <= 13 || i <=6 || i >= totalPages - 5) {
+                html += ' [<a href="http://forum14.hkgolden.com/view.aspx?type=' + type +'&message=' + v.Message_ID + '&page=' + i + '&sensormode=N" target="_blank">' + i + '</a>]';
+              }
+              else {
+                if (totalPages > 13 && i == 7) {
+                  html += ' ... ';
+                }
+              }
+            }
+            html += '</td><td>' + encode_html(v.Author_Name) +
+              '</td><td>' + format_time_display(date) +
+              '</td><td>' + v.Total_Replies +
+              '</td><td>' + v.Rating +
+              '</td><td>' + (hist15min?Math.max(0, v.Total_Replies - hist15min.r):'') +
+              '</td><td>' + (hist1hr?Math.max(0, v.Total_Replies - hist1hr.r):'') +
+              '</td><td>' + (hist2hr?Math.max(0, v.Total_Replies - hist2hr.r):'') +
+              '</td><td>' + (hist6hr?Math.max(0, v.Total_Replies - hist6hr.r):'') +
+              '</td><td>' + (hist24hr?Math.max(0, v.Total_Replies - hist24hr.r):'') +
+              '</td></tr>';
+          }
+        });
+
+        if (!background) {
+          if (page === 1) {
+            document.getElementById('toc-body').innerHTML = '';
+          }
+          document.getElementById('toc-body').innerHTML += html;
+        }
+
+        console.log(new Date(), "Finish " + type + " " + page);
+        if (page >= 5) {
+          var objectToStore = {};
+          var storageKey = 'message_history_' + g_type;
+          objectToStore[storageKey] = g_message_hist;
+          chrome.storage.local.set(objectToStore, function() {
+            console.log(new Date(), "Saved " + type + " " + page);
+            window.setTimeout(function() { get_toc(type, 1, loadedMessageList, true);}, 30000);
+          });
+          return;
+        }
+        else {
+          get_toc(type, ++page, loadedMessageList, background);
         }
       }
-      catch (err) {
-        console.log(err);
-      }
+    }
+    catch (err) {
+      console.log(err);
     }
   });
 }
