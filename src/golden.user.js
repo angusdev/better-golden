@@ -330,10 +330,7 @@ function remove_cache(key) {
 
 // remove empty row causes by ad blocker
 function topics_remove_ad_empty_row() {
-  //xpathl('//div[@class="Topic_ListPanel"]//td[@height="52"]').each(function() {
-  //  this.parentNode.parentNode.removeChild(this.parentNode);
-  //});
-  $e('[class*="-ad-"],script[src*="pagead2"]', function() {
+  $e('[class*="-ad-"],script[src*="pagead2"],div[id*="div-gpt-ad-"]', function() {
     var p = utils.parent(this, 'tr');
     if (p) {
       p.style.display = 'none';
@@ -787,21 +784,8 @@ function view_update_smart_timestamp() {
 
 // remove empty row caused by ad blocker
 function view_remove_ad_empty_row() {
-  /*
-  xpathl('//div[@id="ctl00_ContentPlaceHolder1_view_form"]/div/table').each(function() {
-    if ((this.innerHTML.indexOf('HKGTopGoogleAd') >= 0 && this.innerHTML.toUpperCase().indexOf('<SPAN ID="HKGTOPGOOGLEAD">') >= 0) ||
-        (this.innerHTML.indexOf('MsgInLineAd') >= 0 && this.innerHTML.toUpperCase().indexOf('<SPAN ID="MSGINLINEAD') > 0)) {
-      this.style.display = 'none';
-    }
-  });
-  */
-  /*
-  $e('[id*="aswift_"]', function() {
-    utils.removeChild(utils.parent(this, 'table'));
-  });
-  */
-  $e('[class*="-ad-"]', function() {
-    var p = utils.parent(this, 'table');
+  $e('[class*="-ad-"],[id*="Banner"]', function() {
+    var p = utils.parent(this, 'tr');
     if (p) {
       p.style.display = 'none';
     }
@@ -1048,14 +1032,14 @@ function view_prevnextbar() {
 
 function view_parse_thread_list(doc) {
   var threads = [];
-  $e('img[src="images\/quote.gif"]', function() {
+  $e('a.btn.btn_small.btn_quote[href*="post.asp"]', function() {
     var node = utils.parent(this, function() { return Sizzle.matchesSelector(this, 'table.repliers'); });
     if (node) {
       var tr = node.rows[node.rows.length - 1];
       var nodeId = tr.getAttribute('id');
       var userId = tr.getAttribute('userid');
       var username = tr.getAttribute('username');
-      var threadId = this.parentNode.getAttribute("href");
+      var threadId = this.getAttribute("href");
       threadId = threadId?threadId.match(/rid=(\d+)/):null;
       threadId = threadId?threadId[1]:null;
       var isFirstPost = threadId == 1;
