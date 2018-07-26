@@ -231,7 +231,6 @@ function get_toc(type, page, loadedMessageList, background) {
             html += '<tr' + (loaded?' style="color: red !important;"':'') + '><td>' +
               '<a href="http://forum14.hkgolden.com/view.aspx?type=' + type + '&message=' + v.Message_ID + '&sensormode=N" target="_blank">' + page + '</a>' +
               '</td><td><a href="' +
-//                'http://forum14.hkgolden.com/view.aspx?type=' + type + '&message=' + v.Message_ID + '&sensormode=N' +
               document.location.href + ',' + v.Message_ID +
               '" target="_blank">' + encode_html(v.Message_Title) +
               '</a>';
@@ -273,12 +272,12 @@ function get_toc(type, page, loadedMessageList, background) {
           objectToStore[storageKey] = g_message_hist;
           chrome.storage.local.set(objectToStore, function() {
             console.log(new Date(), "Saved " + type + " " + page);
-            window.setTimeout(function() { get_toc(type, 1, loadedMessageList, true);}, 30000);
+            //window.setTimeout(function() { get_toc(type, 1, loadedMessageList, true); }, 60000);
           });
           return;
         }
         else {
-          get_toc(type, ++page, loadedMessageList, background);
+          window.setTimeout(function() { get_toc(type, ++page, loadedMessageList, background); }, 1000);
         }
       }
     }
