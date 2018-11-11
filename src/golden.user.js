@@ -192,7 +192,7 @@ function parse_view_url(url) {
   var msgId = url.match(/[\?|\&]message=(\d+)/);
   var type = url.match(/[\?|\&]type=([a-zA-Z0-9]+)/);
   var pageNum = url.match(/[\?|\&]page=(\d+)/);
-  var forum = url.match(/^https?\:\/\/forum(\d+)\.hkgolden\.com\//);
+  var forum = url.match(/^https?\:\/\/forum(\d*)\.hkgolden\.com\//);
   if (msgId) {
     msgId = parseInt(msgId[1], 10);
   }
@@ -1132,7 +1132,7 @@ function view_resize_images() {
   // hkgolden will resize the image to 300px width in onload
   // as at this script run, the image may still loading so need to setInterval to keep checking
   window.setInterval(function() {
-    $e('.repliers img[width=300]:not([data-ellab-resizeimg])', function() {
+    $e('.repliers img[onload="DrawImage(this)"]:not([data-ellab-resizeimg])', function() {
       var ele = this;
       // somehow in utils.find callback, 'this' is converted from string literal to String object so need to toString()
       if (utils.find(g_imglist, function() { return this.toString() == ele.src; })) {
@@ -1173,7 +1173,9 @@ function view_resize_images_do_resize(ele) {
     if (!td) return;
 
     var height = parseInt(ele.getAttribute('height'), 10);
-    if (!height || isNaN(height)) return;
+    if (!height || isNaN(height)) {
+      height = this.height;
+    }
 
     var maxWidth = td.clientWidth;
     var left = utils.calcOffsetLeft(ele) - utils.calcOffsetLeft(td);
@@ -1246,8 +1248,8 @@ function view_golden_message_link() {
       }
       if (parsed.forum != meta('server')) {
         // change to current server
-        this.href = this.href.replace(/^http\:\/\/forum\d+\.hkgolden\.com\//, 'http://' + get_forum_domain(meta('server')) + '/');
-        this.innerHTML = this.innerHTML.replace(/http\:\/\/forum\d+\.hkgolden\.com\//, 'http://' + get_forum_domain(meta('server')) + '/');
+        this.href = this.href.replace(/^http\:\/\/forum\d*\.hkgolden\.com\//, 'http://' + get_forum_domain(meta('server')) + '/');
+        this.innerHTML = this.innerHTML.replace(/http\:\/\/forum\d*\.hkgolden\.com\//, 'http://' + get_forum_domain(meta('server')) + '/');
       }
     }
   });
@@ -1325,7 +1327,7 @@ function view_expand_youtube() {
         if (e.target.tagName && e.target.tagName.toLowerCase() === 'img') {
           // only effective when click the thumbnail
           if (e.target.src.indexOf('http://img.youtube.com/vi/') >= 0 && this.innerHTML.indexOf('iframe') < 0) {
-            this.innerHTML = '<iframe width="560" height="315" src="http://www.youtube.com/embed/' + this.getAttribute('ellab-youtube-vid') + '" frameborder="0" allowfullscreen></iframe>';
+            this.innerHTML = '<iframe width="560" height="315" src="https://www.youtube.com/embed/' + this.getAttribute('ellab-youtube-vid') + '" frameborder="0" allowfullscreen></iframe>';
           }
         }
       }, false);
